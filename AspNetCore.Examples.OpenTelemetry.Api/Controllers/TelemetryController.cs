@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 
-namespace AspNetCore.OpenTelemetry.Example.Api.Controllers;
+namespace AspNetCore.Examples.OpenTelemetry.Api.Controllers;
 
 [ApiController]
 [Route("telemetry")]

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNetCore.OpenTelemetry.Example.Api", "AspNetCore.OpenTelemetry.Example.Api\AspNetCore.OpenTelemetry.Example.Api.csproj", "{5E5622A6-A12F-4A63-BB20-349F73266619}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNetCore.Examples.OpenTelemetry.Api", "AspNetCore.Examples.OpenTelemetry.Api\AspNetCore.Examples.OpenTelemetry.Api.csproj", "{5E5622A6-A12F-4A63-BB20-349F73266619}"
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{4B4C98C5-210A-4F1E-933F-887984C67280}"
 EndProject

@@ -2,28 +2,28 @@ version: '3.4'
 
 services:
   api:
-    container_name: aspnetcore-opentelemetry-example-api
-    image: ${DOCKER_REGISTRY-}aspnetcore-opentelemetry-example-api
+    container_name: aspnetcore-examples-opentelemetry-api
+    image: ${DOCKER_REGISTRY-}aspnetcore-examples-opentelemetry-api
     build:
       context: .
-      dockerfile: AspNetCore.OpenTelemetry.Example.Api/Dockerfile
+      dockerfile: AspNetCore.Examples.OpenTelemetry.Api/Dockerfile
 
   otel-collector:
-    container_name: aspnetcore-opentelemetry-example-otel-collector
+    container_name: aspnetcore-examples-opentelemetry-otel-collector
     image: otel/opentelemetry-collector-contrib:0.80.0
 
   tempo:
-    container_name: aspnetcore-opentelemetry-example-tempo
+    container_name: aspnetcore-examples-opentelemetry-tempo
     image: grafana/tempo:main-e680bda
 
   prometheus:
-    container_name: aspnetcore-opentelemetry-example-prometheus
+    container_name: aspnetcore-examples-opentelemetry-prometheus
     image: prom/prometheus:v2.45.0
 
   loki:
-    container_name: aspnetcore-opentelemetry-example-loki
+    container_name: aspnetcore-examples-opentelemetry-loki
     image: grafana/loki:main-125e168
 
   grafana:
-    container_name: aspnetcore-opentelemetry-example-grafana
+    container_name: aspnetcore-examples-opentelemetry-grafana
     image: grafana/grafana:10.0.1-ubuntu

@@ -1,4 +1,4 @@
-using AspNetCore.OpenTelemetry.Example.Api.Extensions;
+using AspNetCore.Examples.OpenTelemetry.Api.Extensions;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);

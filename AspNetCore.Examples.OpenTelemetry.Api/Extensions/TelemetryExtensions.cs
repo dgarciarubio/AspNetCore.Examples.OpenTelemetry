@@ -4,7 +4,7 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
-namespace AspNetCore.OpenTelemetry.Example.Api.Extensions;
+namespace AspNetCore.Examples.OpenTelemetry.Api.Extensions;
 
 public static class TelemetryExtensions
 {
