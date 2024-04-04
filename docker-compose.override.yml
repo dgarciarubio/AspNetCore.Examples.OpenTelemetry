@@ -4,9 +4,10 @@ services:
   api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
       - OpenTelemetry__Exporters__Otlp__Endpoint=http://otel-collector:4317
     ports:
-      - "8080:80"
+      - "8080:8080"
 
   otel-collector:
     command: ["--config=/etc/otel-collector-config.yaml"]

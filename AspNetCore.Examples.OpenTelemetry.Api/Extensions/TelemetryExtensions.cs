@@ -49,7 +49,7 @@ public static class TelemetryExtensions
         return logging;
     }
 
-    private static OpenTelemetryBuilder ConfigureCustomResource(this OpenTelemetryBuilder builder, IConfigurationSection openTelemetryConfig)
+    private static IOpenTelemetryBuilder ConfigureCustomResource(this IOpenTelemetryBuilder builder, IConfigurationSection openTelemetryConfig)
     {
         var resourceConfig = openTelemetryConfig.GetSection("Resource");
         if (!resourceConfig.Exists())
@@ -65,12 +65,13 @@ public static class TelemetryExtensions
                     serviceNamespace: serviceOptions.Namespace,
                     serviceVersion: serviceOptions.Version,
                     autoGenerateServiceInstanceId: serviceOptions.AutoGenerateInstanceId || string.IsNullOrWhiteSpace(serviceOptions.InstanceId),
-                    serviceInstanceId: serviceOptions.AutoGenerateInstanceId ? null : serviceOptions.InstanceId);
+                    serviceInstanceId: serviceOptions.AutoGenerateInstanceId ? null : serviceOptions.InstanceId
+                );
             }
         });
     }
 
-    private static OpenTelemetryBuilder WithCustomTracing(this OpenTelemetryBuilder builder, IConfigurationSection openTelemetryConfig)
+    private static IOpenTelemetryBuilder WithCustomTracing(this IOpenTelemetryBuilder builder, IConfigurationSection openTelemetryConfig)
     {
         var tracingConfig = openTelemetryConfig.GetSection("Tracing");
         if (!tracingConfig.Exists())
@@ -105,7 +106,7 @@ public static class TelemetryExtensions
         });
     }
 
-    private static OpenTelemetryBuilder WithCustomMetrics(this OpenTelemetryBuilder builder, IConfigurationSection openTelemetryConfig)
+    private static IOpenTelemetryBuilder WithCustomMetrics(this IOpenTelemetryBuilder builder, IConfigurationSection openTelemetryConfig)
     {
         var metricsConfig = openTelemetryConfig.GetSection("Metrics");
         if (!metricsConfig.Exists())
@@ -119,26 +120,10 @@ public static class TelemetryExtensions
                 builder.AddMeter(meters);
             }
 
-            var aspNetCoreInstrCongfig = metricsConfig.GetSection("Instrumentation:AspNetCore");
-            if (aspNetCoreInstrCongfig.Exists())
+            var enableAspNetCoreInstr = metricsConfig.GetValue("Instrumentation:AspNetCore", defaultValue: false);
+            if (enableAspNetCoreInstr)
             {
-                builder.AddAspNetCoreInstrumentation(aspNetCoreInstrCongfig.Bind);
-            }
-
-            var eventCountersInstrConfig = metricsConfig.GetSection("Instrumentation:EventCounters");
-            if (eventCountersInstrConfig.Exists())
-            {
-                builder.AddEventCountersInstrumentation(options =>
-                {
-                    eventCountersInstrConfig.Bind(options);
-                    var eventSources = eventCountersInstrConfig
-                        .GetSection("EventSources")
-                        .Get<string[]>() ?? Array.Empty<string>();
-                    options.AddEventSources(eventSources);
-
-                    // Check available event sources at
-                    // https://learn.microsoft.com/en-us/dotnet/core/diagnostics/available-counters
-                });
+                builder.AddAspNetCoreInstrumentation();
             }
 
             // Add more instrumentation as needed

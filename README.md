@@ -4,9 +4,9 @@ This project serves as an example of how to monitor an ASP.Net Core application 
 
 It makes use of the following technologies and projects:
 
-- [.NET 7.0](https://dotnet.microsoft.com/es-es/download/dotnet/7.0)
-- [ASP.NET Core 7.0](https://learn.microsoft.com/es-es/aspnet/core/?view=aspnetcore-7.0)
-- [Swashbuckle](https://learn.microsoft.com/en-us/aspnet/core/tutorials/getting-started-with-swashbuckle?view=aspnetcore-7.0&tabs=visual-studio)
+- [.NET 8.0](https://dotnet.microsoft.com/download/dotnet/8.0)
+- [ASP.NET Core 8.0](https://learn.microsoft.com/aspnet/core/?view=aspnetcore-8.0)
+- [Swashbuckle](https://learn.microsoft.com/aspnet/core/tutorials/getting-started-with-swashbuckle?view=aspnetcore-8.0)
 - [Docker](https://docs.docker.com/)
 - [Docker compose](https://docs.docker.com/compose/)
 - [OpenTelemetry](https://opentelemetry.io/)
