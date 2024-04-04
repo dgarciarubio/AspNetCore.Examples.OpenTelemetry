@@ -10,20 +10,20 @@ services:
 
   otel-collector:
     container_name: aspnetcore-examples-opentelemetry-otel-collector
-    image: otel/opentelemetry-collector-contrib:0.80.0
+    image: otel/opentelemetry-collector-contrib:0.97.0
 
   tempo:
     container_name: aspnetcore-examples-opentelemetry-tempo
-    image: grafana/tempo:main-e680bda
+    image: grafana/tempo:main-13885de
 
   prometheus:
     container_name: aspnetcore-examples-opentelemetry-prometheus
-    image: prom/prometheus:v2.45.0
+    image: prom/prometheus:v2.51.1
 
   loki:
     container_name: aspnetcore-examples-opentelemetry-loki
-    image: grafana/loki:main-125e168
+    image: grafana/loki:main-491d251
 
   grafana:
     container_name: aspnetcore-examples-opentelemetry-grafana
-    image: grafana/grafana:10.0.1-ubuntu
+    image: grafana/grafana:10.1.9-ubuntu
