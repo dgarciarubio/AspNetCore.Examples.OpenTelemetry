@@ -17,4 +17,8 @@
 	  <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.8.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\AspNetCore.Examples.OpenTelemetry.ServiceDefaults\AspNetCore.Examples.OpenTelemetry.ServiceDefaults.csproj" />
+  </ItemGroup>
+
 </Project>

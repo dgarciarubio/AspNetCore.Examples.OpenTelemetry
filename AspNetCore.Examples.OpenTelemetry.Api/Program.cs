@@ -1,22 +1,35 @@
 using AspNetCore.Examples.OpenTelemetry.Api.Extensions;
+using AspNetCore.Examples.OpenTelemetry.Api.SampleTelemetry;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Logging
-    .AddCustomOpenTelemetry(builder.Configuration);
+builder.AddServiceDefaults();
+    
+builder.Services.AddCustomOpenApi();
 
-builder.Services
-    .AddCustomOpenApi()
-    .AddCustomOpenTelemetry(builder.Configuration);
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddCors(cors => cors.AddDefaultPolicy(policy =>
+    {
+        policy
+            .AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    }));
+}
+
+builder.Services.AddSampleTelemetry();
+
 
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
+    app.UseCors();
     app.MapCustomOpenApi();
     app.UseCustomOpenApiUI();
 }
 
-app.MapTelemetryEndpoints();
+app.MapSampleTelemetryEndpoints();
 
 app.Run();
