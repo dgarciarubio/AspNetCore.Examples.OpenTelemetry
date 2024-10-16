@@ -12,7 +12,7 @@ internal static class TypeNameHelper
 {
     private const char DefaultNestedTypeDelimiter = '+';
 
-    private static readonly Dictionary<Type, string> _builtInTypeNames = new Dictionary<Type, string>
+    private static readonly Dictionary<Type, string> _builtInTypeNames = new()
     {
         { typeof(void), "void" },
         { typeof(bool), "bool" },
@@ -177,22 +177,14 @@ internal static class TypeNameHelper
         }
     }
 
-    private readonly struct DisplayNameOptions
+    private readonly struct DisplayNameOptions(bool fullName, bool includeGenericParameterNames, bool includeGenericParameters, char nestedTypeDelimiter)
     {
-        public DisplayNameOptions(bool fullName, bool includeGenericParameterNames, bool includeGenericParameters, char nestedTypeDelimiter)
-        {
-            FullName = fullName;
-            IncludeGenericParameters = includeGenericParameters;
-            IncludeGenericParameterNames = includeGenericParameterNames;
-            NestedTypeDelimiter = nestedTypeDelimiter;
-        }
+        public bool FullName { get; } = fullName;
 
-        public bool FullName { get; }
+        public bool IncludeGenericParameters { get; } = includeGenericParameters;
 
-        public bool IncludeGenericParameters { get; }
+        public bool IncludeGenericParameterNames { get; } = includeGenericParameterNames;
 
-        public bool IncludeGenericParameterNames { get; }
-
-        public char NestedTypeDelimiter { get; }
+        public char NestedTypeDelimiter { get; } = nestedTypeDelimiter;
     }
 }

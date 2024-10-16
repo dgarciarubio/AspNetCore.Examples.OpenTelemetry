@@ -1,4 +1,6 @@
-﻿namespace System.Diagnostics;
+﻿#pragma warning disable IDE0130 // Namespace does not match folder structure
+namespace System.Diagnostics;
+#pragma warning restore IDE0130 // Namespace does not match folder structure
 
 /// <summary>
 /// Options for creating an <see cref="ActivitySource"/>.
@@ -15,11 +17,7 @@ public class ActivitySourceOptions
         get => _name;
         set
         {
-            if (value is null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
-
+            ArgumentNullException.ThrowIfNull(value, nameof(Name));
             _name = value;
         }
     }
@@ -40,8 +38,7 @@ public class ActivitySourceOptions
     /// <param name="name">The ActivitySource name.</param>
     public ActivitySourceOptions(string name)
     {
-        Name = name;
-
-        Debug.Assert(_name is not null);
+        ArgumentNullException.ThrowIfNull(name, nameof(name));
+        _name = name;
     }
 }

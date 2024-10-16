@@ -2,9 +2,11 @@
 using Microsoft.Extensions.Logging;
 using System.Diagnostics.Metrics;
 
+#pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace System.Diagnostics;
+#pragma warning restore IDE0130 // Namespace does not match folder structure
 
-public class Telemetry<TCategoryName> : ITelemetry<TCategoryName>
+public class Telemetry<TCategoryName> : ITelemetry<TCategoryName>, IDisposable
 {
     private bool disposedValue;
 
@@ -21,8 +23,8 @@ public class Telemetry<TCategoryName> : ITelemetry<TCategoryName>
     public ActivitySource ActivitySource { get; }
     public Meter Meter { get; }
 
-    protected virtual ActivitySourceOptions ActivitySourceOptions => new ActivitySourceOptions(CategoryName);
-    protected virtual MeterOptions MeterOptions => new MeterOptions(CategoryName);
+    protected virtual ActivitySourceOptions ActivitySourceOptions => new(CategoryName);
+    protected virtual MeterOptions MeterOptions => new(CategoryName);
 
     protected virtual void Dispose(bool disposing)
     {

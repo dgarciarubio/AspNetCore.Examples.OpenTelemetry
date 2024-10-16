@@ -4,8 +4,9 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
+#pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace Microsoft.Extensions.Hosting;
-
+#pragma warning restore IDE0130 // Namespace does not match folder structure
 public static class Extensions
 {
     private static readonly Type TelemetryType = typeof(Telemetry<>);
@@ -57,7 +58,7 @@ public static class Extensions
     private static bool TryGetBaseTelemetryType(this Type implementationType, [MaybeNullWhen(returnValue: false)] out Type baseTelemetryType)
     {
         baseTelemetryType = null;
-        var type = implementationType;
+        Type? type = implementationType;
         while (type != null && type != typeof(object))
         {
             if (type.IsGenericType && type.GetGenericTypeDefinition() == TelemetryType)
