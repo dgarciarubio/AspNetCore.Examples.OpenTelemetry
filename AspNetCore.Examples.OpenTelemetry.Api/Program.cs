@@ -1,11 +1,11 @@
-using AspNetCore.Examples.OpenTelemetry.Api.Extensions;
-using AspNetCore.Examples.OpenTelemetry.Api.SampleTelemetry;
+using AspNetCore.Examples.OpenTelemetry.Api.WeatherForecast;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
-    
-builder.Services.AddCustomOpenApi();
+
+builder.Services.AddOpenApi();
 
 if (builder.Environment.IsDevelopment())
 {
@@ -18,18 +18,17 @@ if (builder.Environment.IsDevelopment())
     }));
 }
 
-builder.Services.AddSampleTelemetry();
-
+builder.Services.AddWeatherForecast();
 
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
     app.UseCors();
-    app.MapCustomOpenApi();
-    app.UseCustomOpenApiUI();
+    app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
-app.MapSampleTelemetryEndpoints();
+app.MapWeatherForecast();
 
 app.Run();

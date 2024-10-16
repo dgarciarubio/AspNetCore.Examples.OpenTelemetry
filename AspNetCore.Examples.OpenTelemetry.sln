@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspNetCore.Examples.OpenTel
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspNetCore.Examples.OpenTelemetry.ServiceDefaults", "AspNetCore.Examples.OpenTelemetry.ServiceDefaults\AspNetCore.Examples.OpenTelemetry.ServiceDefaults.csproj", "{48B7BA98-6E70-4D59-8F5A-B18C6B8586ED}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspNetCore.Examples.OpenTelemetry.TelemetryExtensions", "AspNetCore.Examples.OpenTelemetry.TelemetryExtensions\AspNetCore.Examples.OpenTelemetry.TelemetryExtensions.csproj", "{7C67218A-4B33-4CB4-B12B-AF02E4E51EB6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,6 +34,10 @@ Global
 		{48B7BA98-6E70-4D59-8F5A-B18C6B8586ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{48B7BA98-6E70-4D59-8F5A-B18C6B8586ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{48B7BA98-6E70-4D59-8F5A-B18C6B8586ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7C67218A-4B33-4CB4-B12B-AF02E4E51EB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C67218A-4B33-4CB4-B12B-AF02E4E51EB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C67218A-4B33-4CB4-B12B-AF02E4E51EB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C67218A-4B33-4CB4-B12B-AF02E4E51EB6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
