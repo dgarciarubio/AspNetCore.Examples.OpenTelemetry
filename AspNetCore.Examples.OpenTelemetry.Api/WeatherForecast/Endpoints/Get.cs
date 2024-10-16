@@ -5,7 +5,7 @@ namespace AspNetCore.Examples.OpenTelemetry.Api.WeatherForecast.Endpoints;
 
 internal static class Get
 {
-    public static readonly IReadOnlyList<string> _summaries =
+    private static readonly IReadOnlyList<string> _summaries =
     [
         "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
     ];
