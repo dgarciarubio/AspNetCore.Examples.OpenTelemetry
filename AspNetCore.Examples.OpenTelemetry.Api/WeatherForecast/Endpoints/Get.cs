@@ -1,32 +1,27 @@
-﻿using System.Diagnostics;
+﻿using AspNetCore.Examples.OpenTelemetry.Api.WeatherForecast.Services;
+using System.Diagnostics;
 
-namespace AspNetCore.Examples.OpenTelemetry.Api.WeatherForecast;
+namespace AspNetCore.Examples.OpenTelemetry.Api.WeatherForecast.Endpoints;
 
-internal static class WeatherForecastExtensions
+internal static class Get
 {
-    public static IServiceCollection AddWeatherForecast(this IServiceCollection services)
-    {
-        services.AddTelemetry<IWeatherForecastTelemetry, WeatherForecastTelemetry>();
-        return services;
-    }
+    public static readonly IReadOnlyList<string> _summaries =
+    [
+        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+    ];
 
-    public static IEndpointRouteBuilder MapWeatherForecast(this IEndpointRouteBuilder endpoints)
+    public static IEndpointRouteBuilder MapGet(this IEndpointRouteBuilder endpoints)
     {
-        var summaries = new[]
-        {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
-
-        endpoints.MapGet("/weather-forecast", (IWeatherForecastTelemetry telemetry) =>
+        endpoints.MapGet("/weather-forecast", (ITelemetry telemetry) =>
         {
             using var activity = telemetry.ActivitySource.StartActivity(name: "weather_forecast.request", kind: ActivityKind.Internal);
-            
+
             var forecast = Enumerable.Range(1, 5).Select(index =>
                 new WeatherForecast
                 (
                     DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
                     Random.Shared.Next(-20, 55),
-                    summaries[Random.Shared.Next(summaries.Length)]
+                    _summaries[Random.Shared.Next(_summaries.Count)]
                 ))
                 .ToArray();
 
