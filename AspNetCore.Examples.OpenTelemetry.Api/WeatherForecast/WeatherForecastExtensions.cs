@@ -17,11 +17,10 @@ internal static class WeatherForecastExtensions
             "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
         };
 
-        endpoints.MapGet("/weatherforecast", (IWeatherForecastTelemetry telemetry) =>
+        endpoints.MapGet("/weather-forecast", (IWeatherForecastTelemetry telemetry) =>
         {
-            using var _ = telemetry.ActivitySource.StartActivity(name: "sample_activity", kind: ActivityKind.Internal);
-            telemetry.Logger.LogInformation("Requesting weather forecast");
-
+            using var activity = telemetry.ActivitySource.StartActivity(name: "weather_forecast.request", kind: ActivityKind.Internal);
+            
             var forecast = Enumerable.Range(1, 5).Select(index =>
                 new WeatherForecast
                 (

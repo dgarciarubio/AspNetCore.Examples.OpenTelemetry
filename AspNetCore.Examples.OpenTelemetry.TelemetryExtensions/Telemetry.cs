@@ -8,27 +8,21 @@ public class Telemetry<TCategoryName> : ITelemetry<TCategoryName>
 {
     private bool disposedValue;
 
-    internal static readonly string CategoryName = TypeNameHelper.GetTypeDisplayName(typeof(TCategoryName), includeGenericParameters: false, nestedTypeDelimiter: '.');
+    public static readonly string CategoryName = TypeNameHelper.GetTypeDisplayName(typeof(TCategoryName), includeGenericParameters: false, nestedTypeDelimiter: '.');
 
     public Telemetry(ILoggerFactory loggerFactory, IMeterFactory meterFactory)
     {
         Logger = loggerFactory.CreateLogger<TCategoryName>();
-        ActivitySource = new ActivitySource(CategoryName, Version);
-        Meter = meterFactory.Create(new MeterOptions(CategoryName)
-        {
-            Version = Version,
-            Scope = Scope,
-            Tags = Tags,
-        });
+        ActivitySource = new ActivitySource(ActivitySourceOptions.Name, ActivitySourceOptions.Version, ActivitySourceOptions.Tags);
+        Meter = meterFactory.Create(MeterOptions);
     }
 
     public ILogger<TCategoryName> Logger { get; }
     public ActivitySource ActivitySource { get; }
     public Meter Meter { get; }
 
-    protected virtual string? Version { get; }
-    protected virtual object? Scope { get; }
-    protected virtual IEnumerable<KeyValuePair<string, object?>>? Tags { get; }
+    protected virtual ActivitySourceOptions ActivitySourceOptions => new ActivitySourceOptions(CategoryName);
+    protected virtual MeterOptions MeterOptions => new MeterOptions(CategoryName);
 
     protected virtual void Dispose(bool disposing)
     {
