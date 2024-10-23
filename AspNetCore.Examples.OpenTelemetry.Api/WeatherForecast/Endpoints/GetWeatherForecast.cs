@@ -3,16 +3,16 @@ using System.Diagnostics;
 
 namespace AspNetCore.Examples.OpenTelemetry.Api.WeatherForecast.Endpoints;
 
-internal static class Get
+internal static class GetWeatherForecast
 {
     private static readonly IReadOnlyList<string> _summaries =
     [
         "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
     ];
 
-    public static IEndpointRouteBuilder MapGet(this IEndpointRouteBuilder endpoints)
+    public static IEndpointRouteBuilder MapGetWeatherForecast(this IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapGet("/weather-forecast", (ITelemetry telemetry) =>
+        endpoints.MapGet("/weather-forecast", (IWeatherForecastTelemetry telemetry) =>
         {
             using var activity = telemetry.ActivitySource.StartActivity(name: "weather_forecast.request", kind: ActivityKind.Internal);
 

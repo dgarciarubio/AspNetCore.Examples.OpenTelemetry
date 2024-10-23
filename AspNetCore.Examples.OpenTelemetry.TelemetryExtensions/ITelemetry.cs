@@ -5,9 +5,14 @@ using System.Diagnostics.Metrics;
 namespace System.Diagnostics;
 #pragma warning restore IDE0130 // Namespace does not match folder structure
 
-public interface ITelemetry<out TCategoryName> 
+public interface ITelemetry
 {
-    ILogger<TCategoryName> Logger { get; }
+    ILogger Logger { get; }
     ActivitySource ActivitySource { get; }
     Meter Meter { get; }
+}
+
+public interface ITelemetry<out TCategoryName> : ITelemetry
+{
+    new ILogger<TCategoryName> Logger { get; }
 }

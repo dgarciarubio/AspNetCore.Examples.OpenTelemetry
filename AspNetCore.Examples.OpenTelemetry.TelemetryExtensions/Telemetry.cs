@@ -1,69 +1,43 @@
-﻿using AspNetCore.Examples.OpenTelemetry.TelemetryExtensions;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System.Diagnostics.Metrics;
 
 #pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace System.Diagnostics;
 #pragma warning restore IDE0130 // Namespace does not match folder structure
 
-public class Telemetry<TCategoryName> : ITelemetry<TCategoryName>, IDisposable
+public class Telemetry : ITelemetry, IDisposable
 {
-    private bool disposedValue;
+    private bool _disposedValue = false;
 
-    public static readonly string CategoryName = TypeNameHelper.GetTypeDisplayName(typeof(TCategoryName), includeGenericParameters: false, nestedTypeDelimiter: '.');
+    public Telemetry(ILoggerFactory loggerFactory, IMeterFactory meterFactory, string name, TelemetryOptions? options = null)
+    : this(
+        CreateLogger(loggerFactory, name),
+        CreateActivitySource(name, options),
+        CreateMeter(meterFactory, name, options)
+    )
+    { }
 
-    private Lazy<ILogger<TCategoryName>>? _logger;
-    private Lazy<ActivitySource>? _activitySource;
-    private Lazy<Meter>? _meter;
-
-    public Telemetry(ILoggerFactory loggerFactory, IMeterFactory meterFactory)
+    private protected Telemetry(ILogger logger, ActivitySource activitySource, Meter meter)
     {
-        _logger = new Lazy<ILogger<TCategoryName>>(() => 
-            loggerFactory.CreateLogger<TCategoryName>(), 
-            isThreadSafe: true);
-        _activitySource = new Lazy<ActivitySource>(() => 
-            new ActivitySource(CategoryName, ActivitySourceOptions.Version, ActivitySourceOptions.Tags),
-            isThreadSafe: true);
-        _meter = new Lazy<Meter>(() => 
-            meterFactory.Create(new MeterOptions(CategoryName)
-            {
-                Version = MeterOptions.Version,
-                Tags = MeterOptions.Tags,
-                Scope = MeterOptions.Scope,
-            }),
-            isThreadSafe: true);
+        Logger = logger;
+        ActivitySource = activitySource;
+        Meter = meter;
+        meter.CreateCounter<int>("instances").Add(1);
     }
 
-
-    public ILogger<TCategoryName> Logger => _logger?.Value ?? throw new ObjectDisposedException(nameof(Logger));
-    public ActivitySource ActivitySource => _activitySource?.Value ?? throw new ObjectDisposedException(nameof(ActivitySource));
-    public Meter Meter => _meter?.Value ?? throw new ObjectDisposedException(nameof(Meter));
-
-    protected virtual ActivitySourceOptions ActivitySourceOptions => new(CategoryName);
-    protected virtual MeterOptions MeterOptions => new(CategoryName);
+    public ILogger Logger { get; }
+    public ActivitySource ActivitySource { get; }
+    public Meter Meter { get; }
 
     protected virtual void Dispose(bool disposing)
     {
-        if (!disposedValue)
+        if (Interlocked.Exchange(ref _disposedValue, true) == false)
         {
             if (disposing)
             {
-                Interlocked.Exchange(ref _logger, null);
-
-                var activitySource = Interlocked.Exchange(ref _activitySource, null);
-                if (activitySource?.IsValueCreated ?? false)
-                {
-                    activitySource.Value.Dispose();
-                }
-
-                var meter = Interlocked.Exchange(ref _meter, null);
-                if (meter?.IsValueCreated ?? false)
-                {
-                    meter.Value.Dispose();
-                }
+                ActivitySource.Dispose();
+                Meter.Dispose();
             }
-
-            disposedValue = true;
         }
     }
 
@@ -71,5 +45,64 @@ public class Telemetry<TCategoryName> : ITelemetry<TCategoryName>, IDisposable
     {
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
+    }
+
+    private protected static ILogger CreateLogger(ILoggerFactory loggerFactory, string name)
+    {
+        return loggerFactory.CreateLogger(name);
+    }
+
+    private protected static ActivitySource CreateActivitySource(string name, TelemetryOptions? options = null)
+    {
+        return new ActivitySource(name, options?.Version, options?.Tags);
+    }
+
+    private protected static Meter CreateMeter(IMeterFactory meterFactory, string name, TelemetryOptions? options = null)
+    {
+        return meterFactory.Create(new MeterOptions(name)
+        {
+            Version = options?.Version,
+            Tags = options?.Tags,
+            Scope = options?.Scope,
+        });
+    }
+}
+
+
+public class Telemetry<TCategoryName> : Telemetry, ITelemetry<TCategoryName>
+{
+    public Telemetry(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions? options = null)
+    : base(
+        CreateLogger(loggerFactory, out var logger, out var name),
+        CreateActivitySource(name, options),
+        CreateMeter(meterFactory, name, options)
+    )
+    {
+        Logger = logger;
+    }
+
+    public new ILogger<TCategoryName> Logger { get; }
+
+    private static ILogger CreateLogger(ILoggerFactory loggerFactory, out ILogger<TCategoryName> logger, out string categoryName)
+    {
+        var observer = new LoggerFactoryCategoryNameObserver(loggerFactory);
+        logger = observer.CreateLogger<TCategoryName>();
+        categoryName = observer.CategoryName ?? throw new InvalidOperationException("Could not retrieve category name from generic logger.");
+        return logger;
+    }
+
+    private class LoggerFactoryCategoryNameObserver(ILoggerFactory inner) : ILoggerFactory
+    {
+        public string? CategoryName { get; private set; }
+
+        public ILogger CreateLogger(string categoryName)
+        {
+            CategoryName = categoryName;
+            return inner.CreateLogger(categoryName);
+        }
+
+        public void AddProvider(ILoggerProvider provider) => inner.AddProvider(provider);
+
+        public void Dispose() => inner.Dispose();
     }
 }
