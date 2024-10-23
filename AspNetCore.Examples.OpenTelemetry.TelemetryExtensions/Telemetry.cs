@@ -95,19 +95,4 @@ public class Telemetry<TCategoryName> : Telemetry, ITelemetry<TCategoryName>
         categoryName = observer.CategoryName ?? throw new InvalidOperationException("Could not retrieve category name from generic logger.");
         return logger;
     }
-
-    private class LoggerFactoryCategoryNameObserver(ILoggerFactory inner) : ILoggerFactory
-    {
-        public string? CategoryName { get; private set; }
-
-        public ILogger CreateLogger(string categoryName)
-        {
-            CategoryName = categoryName;
-            return inner.CreateLogger(categoryName);
-        }
-
-        public void AddProvider(ILoggerProvider provider) => inner.AddProvider(provider);
-
-        public void Dispose() => inner.Dispose();
-    }
 }
