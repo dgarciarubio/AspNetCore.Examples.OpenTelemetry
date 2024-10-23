@@ -22,7 +22,6 @@ public class Telemetry : ITelemetry, IDisposable
         Logger = logger;
         ActivitySource = activitySource;
         Meter = meter;
-        meter.CreateCounter<int>("instances").Add(1);
     }
 
     public ILogger Logger { get; }
@@ -49,16 +48,21 @@ public class Telemetry : ITelemetry, IDisposable
 
     private protected static ILogger CreateLogger(ILoggerFactory loggerFactory, string name)
     {
+        ArgumentNullException.ThrowIfNull(loggerFactory, nameof(loggerFactory));
+        ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
         return loggerFactory.CreateLogger(name);
     }
 
     private protected static ActivitySource CreateActivitySource(string name, TelemetryOptions? options = null)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
         return new ActivitySource(name, options?.Version, options?.Tags);
     }
 
     private protected static Meter CreateMeter(IMeterFactory meterFactory, string name, TelemetryOptions? options = null)
     {
+        ArgumentNullException.ThrowIfNull(meterFactory, nameof(meterFactory));
+        ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
         return meterFactory.Create(new MeterOptions(name)
         {
             Version = options?.Version,
@@ -85,6 +89,7 @@ public class Telemetry<TCategoryName> : Telemetry, ITelemetry<TCategoryName>
 
     private static ILogger CreateLogger(ILoggerFactory loggerFactory, out ILogger<TCategoryName> logger, out string categoryName)
     {
+        ArgumentNullException.ThrowIfNull(loggerFactory, nameof(loggerFactory));
         var observer = new LoggerFactoryCategoryNameObserver(loggerFactory);
         logger = observer.CreateLogger<TCategoryName>();
         categoryName = observer.CategoryName ?? throw new InvalidOperationException("Could not retrieve category name from generic logger.");
