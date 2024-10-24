@@ -77,9 +77,9 @@ public class Telemetry<TCategoryName> : Telemetry, ITelemetry<TCategoryName>
 {
     public Telemetry(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions? options = null)
     : base(
-        CreateLogger(loggerFactory, out var logger, out var name),
-        CreateActivitySource(name, options),
-        CreateMeter(meterFactory, name, options)
+        CreateLogger(loggerFactory, out var logger),
+        CreateActivitySource(CategoryNameHelper.GetFor<TCategoryName>(), options),
+        CreateMeter(meterFactory, CategoryNameHelper.GetFor<TCategoryName>(), options)
     )
     {
         Logger = logger;
@@ -87,12 +87,12 @@ public class Telemetry<TCategoryName> : Telemetry, ITelemetry<TCategoryName>
 
     public new ILogger<TCategoryName> Logger { get; }
 
-    private static ILogger CreateLogger(ILoggerFactory loggerFactory, out ILogger<TCategoryName> logger, out string categoryName)
+    private static ILogger CreateLogger(ILoggerFactory loggerFactory, out ILogger<TCategoryName> logger)
     {
         ArgumentNullException.ThrowIfNull(loggerFactory, nameof(loggerFactory));
         var observer = new LoggerFactoryCategoryNameObserver(loggerFactory);
         logger = observer.CreateLogger<TCategoryName>();
-        categoryName = observer.CategoryName ?? throw new InvalidOperationException("Could not retrieve category name from generic logger.");
+        categoryName = observer.CategoryName;
         return logger;
     }
 }
