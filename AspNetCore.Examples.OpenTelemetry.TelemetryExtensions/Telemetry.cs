@@ -9,13 +9,14 @@ public class Telemetry : ITelemetry, IDisposable
 {
     private bool _disposedValue = false;
 
-    public Telemetry(ILoggerFactory loggerFactory, IMeterFactory meterFactory, string name, TelemetryOptions? options = null)
+    public Telemetry(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions options)
     : this(
-        CreateLogger(loggerFactory, name),
-        CreateActivitySource(name, options),
-        CreateMeter(meterFactory, name, options)
+        CreateLogger(loggerFactory, options),
+        CreateActivitySource(options),
+        CreateMeter(meterFactory, options)
     )
-    { }
+    {
+    }
 
     private protected Telemetry(ILogger logger, ActivitySource activitySource, Meter meter)
     {
@@ -46,28 +47,27 @@ public class Telemetry : ITelemetry, IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private protected static ILogger CreateLogger(ILoggerFactory loggerFactory, string name)
+    private protected static ILogger CreateLogger(ILoggerFactory loggerFactory, TelemetryOptions options)
     {
-        ArgumentNullException.ThrowIfNull(loggerFactory, nameof(loggerFactory));
-        ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
-        return loggerFactory.CreateLogger(name);
+        ArgumentNullException.ThrowIfNull(loggerFactory);
+        ArgumentNullException.ThrowIfNull(options);
+        return loggerFactory.CreateLogger(options.Name);
+    }
+    private protected static ActivitySource CreateActivitySource(TelemetryOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        return new ActivitySource(options.Name, options.Version, options.Tags);
     }
 
-    private protected static ActivitySource CreateActivitySource(string name, TelemetryOptions? options = null)
+    private protected static Meter CreateMeter(IMeterFactory meterFactory, TelemetryOptions options)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
-        return new ActivitySource(name, options?.Version, options?.Tags);
-    }
-
-    private protected static Meter CreateMeter(IMeterFactory meterFactory, string name, TelemetryOptions? options = null)
-    {
-        ArgumentNullException.ThrowIfNull(meterFactory, nameof(meterFactory));
-        ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
-        return meterFactory.Create(new MeterOptions(name)
+        ArgumentNullException.ThrowIfNull(meterFactory);
+        ArgumentNullException.ThrowIfNull(options);
+        return meterFactory.Create(new MeterOptions(options.Name)
         {
-            Version = options?.Version,
-            Tags = options?.Tags,
-            Scope = options?.Scope,
+            Version = options.Version,
+            Tags = options.Tags,
+            Scope = options.Scope
         });
     }
 }
@@ -75,39 +75,25 @@ public class Telemetry : ITelemetry, IDisposable
 
 public class Telemetry<TCategoryName> : Telemetry, ITelemetry<TCategoryName>
 {
-    public Telemetry(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions? options = null)
+    public static readonly string Name = TelemetryOptions<TCategoryName>.Name;
+
+    private static readonly TelemetryOptions<TCategoryName> _defaultOptions = new TelemetryOptions<TCategoryName>();
+
+    public Telemetry(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<TCategoryName>? options = null)
     : base(
-        CreateLogger(loggerFactory, out var logger, out var name),
-        CreateActivitySource(name, options),
-        CreateMeter(meterFactory, name, options)
+        CreateLogger(loggerFactory),
+        CreateActivitySource(options ?? _defaultOptions),
+        CreateMeter(meterFactory, options ?? _defaultOptions)
     )
     {
-        Logger = logger;
+        Logger = (ILogger<TCategoryName>)base.Logger;
     }
 
     public new ILogger<TCategoryName> Logger { get; }
 
-    private static ILogger CreateLogger(ILoggerFactory loggerFactory, out ILogger<TCategoryName> logger, out string categoryName)
+    private static ILogger<TCategoryName> CreateLogger(ILoggerFactory loggerFactory)
     {
-        ArgumentNullException.ThrowIfNull(loggerFactory, nameof(loggerFactory));
-        var observer = new LoggerFactoryCategoryNameObserver(loggerFactory);
-        logger = observer.CreateLogger<TCategoryName>();
-        categoryName = observer.CategoryName ?? throw new InvalidOperationException("Could not retrieve category name from generic logger.");
-        return logger;
-    }
-
-    private class LoggerFactoryCategoryNameObserver(ILoggerFactory inner) : ILoggerFactory
-    {
-        public string? CategoryName { get; private set; }
-
-        public ILogger CreateLogger(string categoryName)
-        {
-            CategoryName = categoryName;
-            return inner.CreateLogger(categoryName);
-        }
-
-        public void AddProvider(ILoggerProvider provider) => inner.AddProvider(provider);
-
-        public void Dispose() => inner.Dispose();
+        ArgumentNullException.ThrowIfNull(loggerFactory);
+        return loggerFactory.CreateLogger<TCategoryName>();
     }
 }

@@ -27,15 +27,7 @@ internal static class TelemetryExtensions
     {
         return services
             .AddSingleton<IWeatherForecastTelemetry, WeatherForecastTelemetry>()
-            .ConfigureOpenTelemetryTracerProvider((serviceProvider, traces) =>
-            {
-                var telemetry = serviceProvider.GetRequiredService<IWeatherForecastTelemetry>();
-                traces.AddSource(telemetry.ActivitySource.Name);
-            })
-            .ConfigureOpenTelemetryMeterProvider((serviceProvider, meters) =>
-            {
-                var telemetry = serviceProvider.GetRequiredService<IWeatherForecastTelemetry>();
-                meters.AddMeter(telemetry.Meter.Name);
-            });
+            .ConfigureOpenTelemetryTracerProvider(t => t.AddSource(WeatherForecastTelemetry.Name))
+            .ConfigureOpenTelemetryMeterProvider(m => m.AddMeter(WeatherForecastTelemetry.Name));
     }
 }

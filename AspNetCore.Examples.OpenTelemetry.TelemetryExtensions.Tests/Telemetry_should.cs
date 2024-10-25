@@ -29,7 +29,7 @@ public class Telemetry_should
     [Fact]
     public void Fail_if_null_loggerFactory()
     {
-        var action = () => new Telemetry(loggerFactory: null!, _meterFactory, "Name");
+        var action = () => new Telemetry(loggerFactory: null!, _meterFactory, new TelemetryOptions("Name"));
 
         action.Should().Throw<ArgumentNullException>()
             .Which.ParamName.Should().Be("loggerFactory");
@@ -38,7 +38,7 @@ public class Telemetry_should
     [Fact]
     public void Fail_if_null_meterFactory()
     {
-        var action = () => new Telemetry(_loggerFactory, meterFactory: null!, "Name");
+        var action = () => new Telemetry(_loggerFactory, meterFactory: null!, new TelemetryOptions("Name"));
 
         action.Should().Throw<ArgumentNullException>()
             .Which.ParamName.Should().Be("meterFactory");
@@ -47,29 +47,29 @@ public class Telemetry_should
     [Fact]
     public void Fail_if_null_name()
     {
-        var action = () => new Telemetry(_loggerFactory, _meterFactory, name: null!);
+        var action = () => new Telemetry(_loggerFactory, _meterFactory, options: null!);
 
         action.Should().Throw<ArgumentNullException>()
-            .Which.ParamName.Should().Be("name");
+            .Which.ParamName.Should().Be("options");
     }
 
     [Theory]
     [ClassData(typeof(TelemetryParamsData))]
-    public void Create_a_logger(string name, TelemetryOptions? options)
+    public void Create_a_logger(TelemetryOptions options)
     {
-        var telemetry = new Telemetry(_loggerFactory, _meterFactory, name, options);
+        var telemetry = new Telemetry(_loggerFactory, _meterFactory, options);
 
         telemetry.Logger.Should().NotBeNull();
     }
 
     [Theory]
     [ClassData(typeof(TelemetryParamsData))]
-    public void Create_an_activity_source(string name, TelemetryOptions? options)
+    public void Create_an_activity_source(TelemetryOptions options)
     {
-        var telemetry = new Telemetry(_loggerFactory, _meterFactory, name, options);
+        var telemetry = new Telemetry(_loggerFactory, _meterFactory, options);
 
         telemetry.Meter.Should().NotBeNull();
-        telemetry.Meter.Name.Should().Be(name);
+        telemetry.Meter.Name.Should().Be(options.Name);
         telemetry.Meter.Version.Should().Be(options?.Version);
         telemetry.Meter.Tags.Should().BeEquivalentTo(options?.Tags);
         telemetry.Meter.Scope.Should().BeEquivalentTo(options?.Scope);
@@ -77,12 +77,12 @@ public class Telemetry_should
 
     [Theory]
     [ClassData(typeof(TelemetryParamsData))]
-    public void Create_a_meter(string name, TelemetryOptions? options)
+    public void Create_a_meter(TelemetryOptions options)
     {
-        var telemetry = new Telemetry(_loggerFactory, _meterFactory, name, options);
+        var telemetry = new Telemetry(_loggerFactory, _meterFactory, options);
 
         telemetry.Meter.Should().NotBeNull();
-        telemetry.Meter.Name.Should().Be(name);
+        telemetry.Meter.Name.Should().Be(options.Name);
         telemetry.Meter.Version.Should().Be(options?.Version);
         telemetry.Meter.Tags.Should().BeEquivalentTo(options?.Tags);
         telemetry.Meter.Scope.Should().BeEquivalentTo(options?.Scope);
@@ -92,8 +92,9 @@ public class Telemetry_should
     {
         public IEnumerator<object?[]> GetEnumerator()
         {
-            yield return ["TelemetryName", null];
-            yield return ["TelemetryName", new TelemetryOptions {
+            yield return [new TelemetryOptions("Name")];
+            yield return [new TelemetryOptions ("Name")
+            {
                 Version = "V1.0",
                 Tags = new Dictionary<string, object?> { { "TagName", "TagValue" } },
                 Scope = "Scope",
@@ -126,7 +127,7 @@ public class Generic_telemetry_should
     [Fact]
     public void Fail_if_null_loggerFactory()
     {
-        var action = () => new Telemetry<TCategory>(loggerFactory: null!, _meterFactory);
+        var action = () => new Telemetry<Category>(loggerFactory: null!, _meterFactory);
 
         action.Should().Throw<ArgumentNullException>()
             .Which.ParamName.Should().Be("loggerFactory");
@@ -135,7 +136,7 @@ public class Generic_telemetry_should
     [Fact]
     public void Fail_if_null_meterFactory()
     {
-        var action = () => new Telemetry<TCategory>(_loggerFactory, meterFactory: null!);
+        var action = () => new Telemetry<Category>(_loggerFactory, meterFactory: null!);
 
         action.Should().Throw<ArgumentNullException>()
             .Which.ParamName.Should().Be("meterFactory");
@@ -143,21 +144,22 @@ public class Generic_telemetry_should
 
     [Theory]
     [ClassData(typeof(TelemetryParamsData))]
-    public void Create_a_logger(TelemetryOptions? options)
+    public void Create_a_logger(TelemetryOptions<Category>? options)
     {
-        var telemetry = new Telemetry<TCategory>(_loggerFactory, _meterFactory, options);
+        var telemetry = new Telemetry<Category>(_loggerFactory, _meterFactory, options);
 
         telemetry.Logger.Should().NotBeNull();
+        telemetry.Logger.Should().Be(((Telemetry)telemetry).Logger);
     }
 
     [Theory]
     [ClassData(typeof(TelemetryParamsData))]
-    public void Create_an_activity_source(TelemetryOptions? options)
+    public void Create_an_activity_source(TelemetryOptions<Category>? options)
     {
-        var telemetry = new Telemetry<TCategory>(_loggerFactory, _meterFactory, options);
+        var telemetry = new Telemetry<Category>(_loggerFactory, _meterFactory, options);
 
         telemetry.Meter.Should().NotBeNull();
-        telemetry.Meter.Name.Should().Be(TCategory.ExpectedName);
+        telemetry.Meter.Name.Should().Be(TelemetryOptions<Category>.Name);
         telemetry.Meter.Version.Should().Be(options?.Version);
         telemetry.Meter.Tags.Should().BeEquivalentTo(options?.Tags);
         telemetry.Meter.Scope.Should().BeEquivalentTo(options?.Scope);
@@ -165,12 +167,12 @@ public class Generic_telemetry_should
 
     [Theory]
     [ClassData(typeof(TelemetryParamsData))]
-    public void Create_a_meter(TelemetryOptions? options)
+    public void Create_a_meter(TelemetryOptions<Category>? options)
     {
-        var telemetry = new Telemetry<TCategory>(_loggerFactory, _meterFactory, options);
+        var telemetry = new Telemetry<Category>(_loggerFactory, _meterFactory, options);
 
         telemetry.Meter.Should().NotBeNull();
-        telemetry.Meter.Name.Should().Be(TCategory.ExpectedName);
+        telemetry.Meter.Name.Should().Be(TelemetryOptions<Category>.Name);
         telemetry.Meter.Version.Should().Be(options?.Version);
         telemetry.Meter.Tags.Should().BeEquivalentTo(options?.Tags);
         telemetry.Meter.Scope.Should().BeEquivalentTo(options?.Scope);
@@ -181,7 +183,8 @@ public class Generic_telemetry_should
         public IEnumerator<object?[]> GetEnumerator()
         {
             yield return [null];
-            yield return [new TelemetryOptions {
+            yield return [new TelemetryOptions<Category>
+            {
                 Version = "V1.0",
                 Tags = new Dictionary<string, object?> { { "TagName", "TagValue" } },
                 Scope = "Scope",
@@ -190,13 +193,8 @@ public class Generic_telemetry_should
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
+}
 
-    private class TCategory
-    {
-        public static readonly string ExpectedName = string.Join(".",
-            typeof(Generic_telemetry_should).Namespace,
-            nameof(Generic_telemetry_should),
-            nameof(TCategory)
-        );
-    }
+public class Category
+{
 }
