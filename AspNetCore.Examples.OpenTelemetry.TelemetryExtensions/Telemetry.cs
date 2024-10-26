@@ -77,13 +77,13 @@ public class Telemetry<TCategoryName> : Telemetry, ITelemetry<TCategoryName>
 {
     public static readonly string Name = TelemetryOptions<TCategoryName>.Name;
 
-    private static readonly TelemetryOptions<TCategoryName> _defaultOptions = new TelemetryOptions<TCategoryName>();
+    private static readonly TelemetryOptions<TCategoryName> DefaultOptions = new();
 
     public Telemetry(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<TCategoryName>? options = null)
     : base(
         CreateLogger(loggerFactory),
-        CreateActivitySource(options ?? _defaultOptions),
-        CreateMeter(meterFactory, options ?? _defaultOptions)
+        CreateActivitySource(options ?? DefaultOptions),
+        CreateMeter(meterFactory, options ?? DefaultOptions)
     )
     {
         Logger = (ILogger<TCategoryName>)base.Logger;
