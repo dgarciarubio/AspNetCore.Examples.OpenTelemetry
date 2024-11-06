@@ -29,6 +29,6 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 }
 
-app.MapWeatherForecast();
+app.MapWeatherForecastEndpoints();
 
 app.Run();
