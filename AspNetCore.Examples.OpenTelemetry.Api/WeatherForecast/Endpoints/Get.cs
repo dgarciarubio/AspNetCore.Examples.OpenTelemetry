@@ -1,15 +1,15 @@
 ﻿using AspNetCore.Examples.OpenTelemetry.Api.WeatherForecast.Services;
-using System.Diagnostics;
+//using System.Diagnostics;
 
 namespace AspNetCore.Examples.OpenTelemetry.Api.WeatherForecast.Endpoints;
 
-internal static class GetWeatherForecast
+internal static class Get
 {
-    public static IEndpointRouteBuilder MapGetWeatherForecast(this IEndpointRouteBuilder endpoints)
+    public static IEndpointRouteBuilder MapGet(this IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapGet("/weather-forecast", (IWeatherForecastTelemetry telemetry) =>
+        endpoints.MapGet("/weather-forecast", (ITelemetry telemetry) =>
         {
-            using var activity = telemetry.ActivitySource.StartActivity(name: "weather_forecast.request", kind: ActivityKind.Internal);
+            using var activity = telemetry.ActivitySource.StartActivity(name: "weather_forecast.request", kind: System.Diagnostics.ActivityKind.Internal);
 
             return Enumerable.Range(1, 5).Select(index =>
             {
@@ -24,7 +24,7 @@ internal static class GetWeatherForecast
                     item.TemperatureC,
                     item.TemperatureF
                 );
-                telemetry.TemperatureC.Record(item.TemperatureC, new TagList
+                telemetry.TemperatureC.Record(item.TemperatureC, new System.Diagnostics.TagList
                 {
                     { "Date", item.Date.ToString("yyyy-MM-dd") },
                     { "Summary", item.Summary }
