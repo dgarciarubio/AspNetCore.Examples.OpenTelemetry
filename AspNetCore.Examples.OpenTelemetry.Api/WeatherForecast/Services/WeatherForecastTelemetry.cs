@@ -21,7 +21,7 @@ internal class WeatherForecastTelemetry : Telemetry<WeatherForecast>, IWeatherFo
     public Histogram<int> TemperatureC { get; }
 }
 
-internal static class TelemetryExtensions
+internal static class WeatherForecastTelemetryExtensions
 {
     public static IServiceCollection AddWeatherForecastTelemetry(this IServiceCollection services)
     {
