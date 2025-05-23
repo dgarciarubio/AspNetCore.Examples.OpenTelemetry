@@ -53,6 +53,7 @@ public class Telemetry : ITelemetry, IDisposable
         ArgumentNullException.ThrowIfNull(options);
         return loggerFactory.CreateLogger(options.Name);
     }
+
     private protected static ActivitySource CreateActivitySource(TelemetryOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
