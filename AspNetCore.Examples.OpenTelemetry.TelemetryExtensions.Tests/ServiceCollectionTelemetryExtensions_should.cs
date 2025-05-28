@@ -33,6 +33,7 @@ public class ServiceCollectionTelemetryExtensions_should
     public void Fail_if_null_services()
     {
         Action[] actions = [
+            () => ServiceCollectionTelemetryExtensions.AddTelemetry(services: null!),
             () => ServiceCollectionTelemetryExtensions.AddTelemetry(services: null!, "Name"),
             () => ServiceCollectionTelemetryExtensions.AddTelemetry(services: null!, new TelemetryOptions("Name")),
             () => ServiceCollectionTelemetryExtensions.AddTelemetry<TelemetryName>(services: null!),
@@ -62,6 +63,18 @@ public class ServiceCollectionTelemetryExtensions_should
 
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal("options", exception.ParamName);
+    }
+
+    [Fact]
+    public void Register_default_telemetry_services()
+    {
+        _services.AddTelemetry();
+
+        var serviceProvider = _services.BuildServiceProvider();
+        var telemetry = serviceProvider.GetService<ITelemetry>();
+        var genericTelemetry = serviceProvider.GetService<ITelemetry<TelemetryName>>();
+        Assert.NotNull(telemetry);
+        Assert.NotNull(genericTelemetry);
     }
 
     [Fact]
