@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using System.Collections;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 
@@ -44,7 +43,7 @@ public class Telemetry_should
     }
 
     [Fact]
-    public void Fail_if_null_name()
+    public void Fail_if_null_options()
     {
         Telemetry action() => new(_loggerFactory, _meterFactory, options: null!);
 
@@ -53,7 +52,7 @@ public class Telemetry_should
     }
 
     [Theory]
-    [MemberData(nameof(TelemetryOptionsData))]
+    [ClassData(typeof(TelemetryOptionsData))]
     public void Create_a_logger(TelemetryOptions options)
     {
         var telemetry = new Telemetry(_loggerFactory, _meterFactory, options);
@@ -62,40 +61,24 @@ public class Telemetry_should
     }
 
     [Theory]
-    [MemberData(nameof(TelemetryOptionsData))]
+    [ClassData(typeof(TelemetryOptionsData))]
     public void Create_an_activity_source(TelemetryOptions options)
     {
         var telemetry = new Telemetry(_loggerFactory, _meterFactory, options);
 
         Assert.NotNull(telemetry.ActivitySource);
-        Assert.Equal(options.Name, telemetry.ActivitySource.Name);
-        Assert.Equal(options.Version, telemetry.ActivitySource.Version);
-        Assert.Equal(options.Tags, telemetry.ActivitySource.Tags);
+        Assert.HasOptions(options, telemetry.ActivitySource);
     }
 
     [Theory]
-    [MemberData(nameof(TelemetryOptionsData))]
+    [ClassData(typeof(TelemetryOptionsData))]
     public void Create_a_meter(TelemetryOptions options)
     {
         var telemetry = new Telemetry(_loggerFactory, _meterFactory, options);
 
         Assert.NotNull(telemetry.Meter);
-        Assert.Equal(options.Name, telemetry.Meter.Name);
-        Assert.Equal(options.Version, telemetry.Meter.Version);
-        Assert.Equal(options.Tags, telemetry.Meter.Tags);
-        Assert.Equal(options.Scope, telemetry.Meter.Scope);
+        Assert.HasOptions(options, telemetry.Meter);
     }
-
-    public static TheoryData<TelemetryOptions> TelemetryOptionsData => new()
-    {
-        { new TelemetryOptions("Name") },
-        { new TelemetryOptions ("Name")
-        {
-            Version = "V1.0",
-            Tags = new Dictionary<string, object?> { { "TagName", "TagValue" } },
-            Scope = "Scope",
-        }},
-    };
 }
 
 public class Generic_telemetry_should
@@ -120,68 +103,48 @@ public class Generic_telemetry_should
     [Fact]
     public void Fail_if_null_loggerFactory()
     {
-        Telemetry<Category> action() => new(loggerFactory: null!, _meterFactory);
+        Telemetry<TelemetryName> action() => new(loggerFactory: null!, _meterFactory);
 
-        var exception = Assert.Throws<ArgumentNullException>((Func<Telemetry<Category>>)action);
+        var exception = Assert.Throws<ArgumentNullException>((Func<Telemetry<TelemetryName>>)action);
         Assert.Equal("loggerFactory", exception.ParamName);
     }
 
     [Fact]
     public void Fail_if_null_meterFactory()
     {
-        Telemetry<Category> action() => new(_loggerFactory, meterFactory: null!);
+        Telemetry<TelemetryName> action() => new(_loggerFactory, meterFactory: null!);
 
-        var exception = Assert.Throws<ArgumentNullException>((Func<Telemetry<Category>>)action);
+        var exception = Assert.Throws<ArgumentNullException>((Func<Telemetry<TelemetryName>>)action);
         Assert.Equal("meterFactory", exception.ParamName);
     }
 
     [Theory]
-    [MemberData(nameof(TelemetryOptionsData))]
-    public void Create_a_logger(TelemetryOptions<Category>? options)
+    [ClassData(typeof(GenericTelemetryOptionsData))]
+    public void Create_a_logger(TelemetryOptions<TelemetryName>? options)
     {
-        var telemetry = new Telemetry<Category>(_loggerFactory, _meterFactory, options);
+        var telemetry = new Telemetry<TelemetryName>(_loggerFactory, _meterFactory, options);
 
         Assert.NotNull(telemetry.Logger);
         Assert.Same(((Telemetry)telemetry).Logger, telemetry.Logger);
     }
 
     [Theory]
-    [MemberData(nameof(TelemetryOptionsData))]
-    public void Create_an_activity_source(TelemetryOptions<Category>? options)
+    [ClassData(typeof(GenericTelemetryOptionsData))]
+    public void Create_an_activity_source(TelemetryOptions<TelemetryName>? options)
     {
-        var telemetry = new Telemetry<Category>(_loggerFactory, _meterFactory, options);
+        var telemetry = new Telemetry<TelemetryName>(_loggerFactory, _meterFactory, options);
 
         Assert.NotNull(telemetry.ActivitySource);
-        Assert.Equal(TelemetryOptions<Category>.Name, telemetry.ActivitySource.Name);
-        Assert.Equal(options?.Version, telemetry.ActivitySource.Version);
-        Assert.Equal(options?.Tags, telemetry.ActivitySource.Tags);
+        Assert.HasOptions(options, telemetry.ActivitySource);
     }
 
     [Theory]
-    [MemberData(nameof(TelemetryOptionsData))]
-    public void Create_a_meter(TelemetryOptions<Category>? options)
+    [ClassData(typeof(GenericTelemetryOptionsData))]
+    public void Create_a_meter(TelemetryOptions<TelemetryName>? options)
     {
-        var telemetry = new Telemetry<Category>(_loggerFactory, _meterFactory, options);
+        var telemetry = new Telemetry<TelemetryName>(_loggerFactory, _meterFactory, options);
 
         Assert.NotNull(telemetry.Meter);
-        Assert.Equal(TelemetryOptions<Category>.Name, telemetry.Meter.Name);
-        Assert.Equal(options?.Version, telemetry.Meter.Version);
-        Assert.Equal(options?.Tags, telemetry.Meter.Tags);
-        Assert.Equal(options?.Scope, telemetry.Meter.Scope);
+        Assert.HasOptions(options, telemetry.Meter);
     }
-
-    public static TheoryData<TelemetryOptions<Category>?> TelemetryOptionsData => new()
-    {
-        { null },
-        { new TelemetryOptions<Category>
-        {
-            Version = "V1.0",
-            Tags = new Dictionary<string, object?> { { "TagName", "TagValue" } },
-            Scope = "Scope",
-        }},
-    };
-}
-
-public class Category
-{
 }
