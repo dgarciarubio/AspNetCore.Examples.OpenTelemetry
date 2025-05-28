@@ -9,7 +9,7 @@ public class Telemetry : ITelemetry, IDisposable
 {
     private bool _disposedValue = false;
 
-    private readonly IReadOnlyCollection<IDisposable?> _loggerScopes;
+    private readonly List<IDisposable?> _loggerScopes;
 
     public Telemetry(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions options)
     {
@@ -17,6 +17,7 @@ public class Telemetry : ITelemetry, IDisposable
         ArgumentNullException.ThrowIfNull(meterFactory, nameof(meterFactory));
         ArgumentNullException.ThrowIfNull(options, nameof(options));
 
+        _loggerScopes = [];
         Logger = loggerFactory.CreateLogger(options.Name);
         ActivitySource = new ActivitySource(
             name: options.Name,
@@ -29,7 +30,8 @@ public class Telemetry : ITelemetry, IDisposable
             Tags = options.Tags,
             Scope = options.Scope
         });
-        _loggerScopes = BeginLoggerScopes(Logger, options);
+
+        BeginLoggerScopes(options);
     }
 
     public ILogger Logger { get; }
@@ -58,23 +60,21 @@ public class Telemetry : ITelemetry, IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private static IReadOnlyCollection<IDisposable?> BeginLoggerScopes(ILogger logger, TelemetryOptions options)
+    private void BeginLoggerScopes(TelemetryOptions options)
     {
-        var loggerScopes = new List<IDisposable?>();
         if (!string.IsNullOrWhiteSpace(options.Version))
         {
             var versionTag = new KeyValuePair<string, object?>(nameof(options.Version), options.Version);
-            loggerScopes.Add(logger.BeginScope(new[] { versionTag }));
+            _loggerScopes.Add(Logger.BeginScope(new[] { versionTag }));
         }
         if (options.Tags is not null && options.Tags.Any())
         {
-            loggerScopes.Add(logger.BeginScope(options.Tags));
+            _loggerScopes.Add(Logger.BeginScope(options.Tags));
         }
         if (options.Scope is not null)
         {
-            loggerScopes.Add(logger.BeginScope(options.Scope));
+            _loggerScopes.Add(Logger.BeginScope(options.Scope));
         }
-        return loggerScopes;
     }
 }
 
