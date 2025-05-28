@@ -23,7 +23,7 @@ internal static class Get
                     item.TemperatureC,
                     item.TemperatureF
                 );
-                telemetry.TemperatureC().Record(item.TemperatureC, new TagList
+                telemetry.TemperatureC.Record(item.TemperatureC, new TagList
                 {
                     { "Date", item.Date.ToString("yyyy-MM-dd") },
                     { "Summary", item.Summary }

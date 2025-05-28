@@ -5,8 +5,8 @@ namespace AspNetCore.Examples.OpenTelemetry.Api.WeatherForecast;
 
 internal static class TelemetryExtensions
 {
-    public static Histogram<int> TemperatureC(this ITelemetry<WeatherForecast> telemetry)
+    extension (ITelemetry<WeatherForecast> telemetry)
     {
-        return telemetry.Meter.CreateHistogram<int>("weather_forecast.temperature", unit: "ºC");
+        public Histogram<int> TemperatureC => telemetry.Meter.CreateHistogram<int>("weather_forecast.temperature", unit: "ºC");
     }
 }
