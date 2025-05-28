@@ -51,7 +51,7 @@ public class ServiceCollectionTelemetryExtensions_should
     [Fact]
     public void Fail_if_null_name()
     {
-        Action action = () => ServiceCollectionTelemetryExtensions.AddTelemetry(_services, name: null!);
+        void action() => ServiceCollectionTelemetryExtensions.AddTelemetry(_services, name: null!);
 
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal("name", exception.ParamName);
@@ -60,7 +60,7 @@ public class ServiceCollectionTelemetryExtensions_should
     [Fact]
     public void Fail_if_null_options()
     {
-        Action action = () => ServiceCollectionTelemetryExtensions.AddTelemetry(_services, options: null!);
+        void action() => ServiceCollectionTelemetryExtensions.AddTelemetry(_services, options: null!);
 
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal("options", exception.ParamName);
@@ -118,8 +118,8 @@ public class ServiceCollectionTelemetryExtensions_should
     }
 
     [Theory]
-    [ClassData(typeof(GenericTelemetryOptionsData))]
-    public void Register_telemetry_services_by_generic_type_options(TelemetryOptions<TelemetryName>? options)
+    [ClassData(typeof(TelemetryOptionsData<TelemetryName>))]
+    public void Register_telemetry_services_by_generic_options(TelemetryOptions<TelemetryName>? options)
     {
         _services.AddTelemetry(options);
 
@@ -135,4 +135,6 @@ public class ServiceCollectionTelemetryExtensions_should
         Assert.NotNull(telemetry.Meter);
         Assert.HasOptions(options, telemetry.Meter);
     }
+
+    public class TelemetryName { }
 }

@@ -1,4 +1,8 @@
+using AspNetCore.Examples.OpenTelemetry.TelemetryExtensions.Tests;
 using System.Diagnostics;
+using Xunit.Sdk;
+
+[assembly: RegisterXunitSerializer(typeof(JsonDataSerializer), typeof(TelemetryOptions), typeof(TelemetryOptions<>))]
 
 namespace AspNetCore.Examples.OpenTelemetry.TelemetryExtensions.Tests;
 
@@ -16,12 +20,13 @@ public class TelemetryOptionsData : TheoryData<TelemetryOptions>
     }
 }
 
-public class GenericTelemetryOptionsData : TheoryData<TelemetryOptions<TelemetryName>?>
+
+public class TelemetryOptionsData<TTelemetryName> : TheoryData<TelemetryOptions<TTelemetryName>?>
 {
-    public GenericTelemetryOptionsData()
+    public TelemetryOptionsData()
     {
-        Add(null);
-        Add(new TelemetryOptions<TelemetryName>
+        Add(null!);
+        Add(new TelemetryOptions<TTelemetryName>
         {
             Version = "V1.0",
             Tags = new Dictionary<string, object?> { { "TagName", "TagValue" } },

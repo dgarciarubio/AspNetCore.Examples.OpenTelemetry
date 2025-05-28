@@ -119,7 +119,7 @@ public class Generic_telemetry_should
     }
 
     [Theory]
-    [ClassData(typeof(GenericTelemetryOptionsData))]
+    [ClassData(typeof(TelemetryOptionsData<TelemetryName>))]
     public void Create_a_logger(TelemetryOptions<TelemetryName>? options)
     {
         var telemetry = new Telemetry<TelemetryName>(_loggerFactory, _meterFactory, options);
@@ -129,7 +129,7 @@ public class Generic_telemetry_should
     }
 
     [Theory]
-    [ClassData(typeof(GenericTelemetryOptionsData))]
+    [ClassData(typeof(TelemetryOptionsData<TelemetryName>))]
     public void Create_an_activity_source(TelemetryOptions<TelemetryName>? options)
     {
         var telemetry = new Telemetry<TelemetryName>(_loggerFactory, _meterFactory, options);
@@ -139,7 +139,7 @@ public class Generic_telemetry_should
     }
 
     [Theory]
-    [ClassData(typeof(GenericTelemetryOptionsData))]
+    [ClassData(typeof(TelemetryOptionsData<TelemetryName>))]
     public void Create_a_meter(TelemetryOptions<TelemetryName>? options)
     {
         var telemetry = new Telemetry<TelemetryName>(_loggerFactory, _meterFactory, options);
@@ -147,4 +147,6 @@ public class Generic_telemetry_should
         Assert.NotNull(telemetry.Meter);
         Assert.HasOptions(options, telemetry.Meter);
     }
+
+    public class TelemetryName { }
 }
