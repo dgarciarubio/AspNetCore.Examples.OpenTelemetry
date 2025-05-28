@@ -1,10 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using System.Collections;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
-using System.Reflection.Metadata.Ecma335;
 
 namespace AspNetCore.Examples.OpenTelemetry.TelemetryExtensions.Tests;
 

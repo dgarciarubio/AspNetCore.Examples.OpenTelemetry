@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using System.Diagnostics.Metrics;
-using System.Xml.Linq;
 
 #pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace System.Diagnostics;

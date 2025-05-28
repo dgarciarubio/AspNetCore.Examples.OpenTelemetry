@@ -19,6 +19,6 @@ internal class JsonDataSerializer : IXunitSerializer
 
     public string Serialize(object value) => JsonSerializer.Serialize(value);
 
-    public object Deserialize(Type type, string serializedValue) => JsonSerializer.Deserialize(serializedValue, type) 
+    public object Deserialize(Type type, string serializedValue) => JsonSerializer.Deserialize(serializedValue, type)
         ?? throw new ArgumentException("Serialized value results in null object", nameof(serializedValue));
 }
