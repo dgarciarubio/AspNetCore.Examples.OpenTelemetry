@@ -19,9 +19,9 @@ public class TelemetryOptions
     public object? Scope { get; init; }
 }
 
-public class TelemetryOptions<TCategoryName> : TelemetryOptions
+public class TelemetryOptions<TTelemetryName> : TelemetryOptions
 {
-    public static readonly new string Name = CategoryNameHelper.GetCategoryName();
+    public static readonly new string Name = CategoryNameHelper.GetTelemetryName();
 
     public TelemetryOptions()
         : base(Name)
@@ -30,10 +30,10 @@ public class TelemetryOptions<TCategoryName> : TelemetryOptions
 
     private static class CategoryNameHelper
     {
-        public static string GetCategoryName()
+        public static string GetTelemetryName()
         {
             var observer = new LoggerFactoryCategoryNameObserver();
-            _ = observer.CreateLogger<TCategoryName>();
+            _ = observer.CreateLogger<TTelemetryName>();
             return observer.CategoryName!;
         }
 

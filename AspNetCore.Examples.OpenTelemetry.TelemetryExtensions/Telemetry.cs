@@ -9,20 +9,27 @@ public class Telemetry : ITelemetry, IDisposable
 {
     private bool _disposedValue = false;
 
-    public Telemetry(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions options)
-    : this(
-        CreateLogger(loggerFactory, options),
-        CreateActivitySource(options),
-        CreateMeter(meterFactory, options)
-    )
-    {
-    }
+    private readonly IReadOnlyCollection<IDisposable?> _loggerScopes;
 
-    private protected Telemetry(ILogger logger, ActivitySource activitySource, Meter meter)
+    public Telemetry(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions options)
     {
-        Logger = logger;
-        ActivitySource = activitySource;
-        Meter = meter;
+        ArgumentNullException.ThrowIfNull(loggerFactory, nameof(loggerFactory));
+        ArgumentNullException.ThrowIfNull(meterFactory, nameof(meterFactory));
+        ArgumentNullException.ThrowIfNull(options, nameof(options));
+
+        Logger = loggerFactory.CreateLogger(options.Name);
+        ActivitySource = new ActivitySource(
+            name: options.Name,
+            version: options.Version,
+            tags: options.Tags
+        );
+        Meter = meterFactory.Create(new MeterOptions(options.Name)
+        {
+            Version = options.Version,
+            Tags = options.Tags,
+            Scope = options.Scope
+        });
+        _loggerScopes = BeginLoggerScopes(Logger, options);
     }
 
     public ILogger Logger { get; }
@@ -35,6 +42,10 @@ public class Telemetry : ITelemetry, IDisposable
         {
             if (disposing)
             {
+                foreach (var scope in _loggerScopes)
+                {
+                    scope?.Dispose();
+                }
                 ActivitySource.Dispose();
                 Meter.Dispose();
             }
@@ -47,54 +58,43 @@ public class Telemetry : ITelemetry, IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private protected static ILogger CreateLogger(ILoggerFactory loggerFactory, TelemetryOptions options)
+    private static IReadOnlyCollection<IDisposable?> BeginLoggerScopes(ILogger logger, TelemetryOptions options)
     {
-        ArgumentNullException.ThrowIfNull(loggerFactory);
-        ArgumentNullException.ThrowIfNull(options);
-        return loggerFactory.CreateLogger(options.Name);
-    }
-
-    private protected static ActivitySource CreateActivitySource(TelemetryOptions options)
-    {
-        ArgumentNullException.ThrowIfNull(options);
-        return new ActivitySource(options.Name, options.Version, options.Tags);
-    }
-
-    private protected static Meter CreateMeter(IMeterFactory meterFactory, TelemetryOptions options)
-    {
-        ArgumentNullException.ThrowIfNull(meterFactory);
-        ArgumentNullException.ThrowIfNull(options);
-        return meterFactory.Create(new MeterOptions(options.Name)
+        var loggerScopes = new List<IDisposable?>();
+        if (!string.IsNullOrWhiteSpace(options.Version))
         {
-            Version = options.Version,
-            Tags = options.Tags,
-            Scope = options.Scope
-        });
+            var versionTag = new KeyValuePair<string, object?>(nameof(options.Version), options.Version);
+            loggerScopes.Add(logger.BeginScope(new[] { versionTag }));
+        }
+        if (options.Tags is not null && options.Tags.Any())
+        {
+            loggerScopes.Add(logger.BeginScope(options.Tags));
+        }
+        if (options.Scope is not null)
+        {
+            loggerScopes.Add(logger.BeginScope(options.Scope));
+        }
+        return loggerScopes;
     }
 }
 
-
-public class Telemetry<TCategoryName> : Telemetry, ITelemetry<TCategoryName>
+public class Telemetry<TTelemetryName>(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<TTelemetryName>? options = null)
+    : Telemetry(new GenericLoggerFactory(loggerFactory), meterFactory, options ?? DefaultOptions), ITelemetry<TTelemetryName>
 {
-    public static readonly string Name = TelemetryOptions<TCategoryName>.Name;
+    public static readonly string Name = TelemetryOptions<TTelemetryName>.Name;
 
-    private static readonly TelemetryOptions<TCategoryName> DefaultOptions = new();
+    private static readonly TelemetryOptions<TTelemetryName> DefaultOptions = new();
 
-    public Telemetry(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<TCategoryName>? options = null)
-    : base(
-        CreateLogger(loggerFactory),
-        CreateActivitySource(options ?? DefaultOptions),
-        CreateMeter(meterFactory, options ?? DefaultOptions)
-    )
+    public new ILogger<TTelemetryName> Logger => (ILogger<TTelemetryName>)base.Logger;
+
+    private sealed class GenericLoggerFactory(ILoggerFactory loggerFactory) : ILoggerFactory
     {
-        Logger = (ILogger<TCategoryName>)base.Logger;
-    }
+        private readonly ILoggerFactory _inner = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
 
-    public new ILogger<TCategoryName> Logger { get; }
+        public void AddProvider(ILoggerProvider provider) => _inner.AddProvider(provider);
 
-    private static ILogger<TCategoryName> CreateLogger(ILoggerFactory loggerFactory)
-    {
-        ArgumentNullException.ThrowIfNull(loggerFactory);
-        return loggerFactory.CreateLogger<TCategoryName>();
+        public ILogger CreateLogger(string categoryName) => _inner.CreateLogger<TTelemetryName>();
+
+        public void Dispose() => _inner.Dispose();
     }
 }

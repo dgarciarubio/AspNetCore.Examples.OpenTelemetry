@@ -12,7 +12,7 @@ public interface ITelemetry
     Meter Meter { get; }
 }
 
-public interface ITelemetry<out TCategoryName> : ITelemetry
+public interface ITelemetry<out TTelemetryName> : ITelemetry
 {
-    new ILogger<TCategoryName> Logger { get; }
+    new ILogger<TTelemetryName> Logger { get; }
 }
