@@ -1,7 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-
-#pragma warning disable IDE0130 // Namespace does not match folder structure
+﻿#pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace System.Diagnostics;
 #pragma warning restore IDE0130 // Namespace does not match folder structure
 
@@ -21,36 +18,10 @@ public class TelemetryOptions
 
 public class TelemetryOptions<TTelemetryName> : TelemetryOptions
 {
-    public static readonly new string Name = CategoryNameHelper.GetTelemetryName();
+    public static readonly new string Name = TelemetryNameHelper.GetTelemetryName<TTelemetryName>();
 
     public TelemetryOptions()
         : base(Name)
     {
     }
-
-    private static class CategoryNameHelper
-    {
-        public static string GetTelemetryName()
-        {
-            var observer = new LoggerFactoryCategoryNameObserver();
-            _ = observer.CreateLogger<TTelemetryName>();
-            return observer.CategoryName!;
-        }
-
-        private class LoggerFactoryCategoryNameObserver : ILoggerFactory
-        {
-            public string? CategoryName { get; private set; }
-
-            public ILogger CreateLogger(string categoryName)
-            {
-                CategoryName = categoryName;
-                return NullLogger.Instance;
-            }
-
-            public void AddProvider(ILoggerProvider provider) { }
-
-            public void Dispose() { }
-        }
-    }
 }
-

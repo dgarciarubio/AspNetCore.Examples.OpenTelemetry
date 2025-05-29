@@ -4,8 +4,6 @@ using System.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddTelemetry();
-
 builder.AddServiceDefaults();
 
 builder.Services.AddOpenApi();

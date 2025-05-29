@@ -78,16 +78,21 @@ public class Telemetry : ITelemetry, IDisposable
     }
 }
 
-public class Telemetry<TTelemetryName>(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<TTelemetryName>? options = null)
-    : Telemetry(new GenericLoggerFactory(loggerFactory), meterFactory, options ?? DefaultOptions), ITelemetry<TTelemetryName>
+public class Telemetry<TTelemetryName> : Telemetry, ITelemetry<TTelemetryName>
 {
     public static readonly string Name = TelemetryOptions<TTelemetryName>.Name;
 
     private static readonly TelemetryOptions<TTelemetryName> DefaultOptions = new();
 
-    public new ILogger<TTelemetryName> Logger => (ILogger<TTelemetryName>)base.Logger;
+    public Telemetry(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<TTelemetryName>? options = null)
+        : base(new GenericLoggerFactory(loggerFactory), meterFactory, options ?? DefaultOptions)
+    {
+        Logger = (ILogger<TTelemetryName>)base.Logger;
+    }
 
-    private sealed class GenericLoggerFactory(ILoggerFactory loggerFactory) : ILoggerFactory
+    public new ILogger<TTelemetryName> Logger { get; } 
+
+    private class GenericLoggerFactory(ILoggerFactory loggerFactory) : ILoggerFactory
     {
         private readonly ILoggerFactory _inner = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
 

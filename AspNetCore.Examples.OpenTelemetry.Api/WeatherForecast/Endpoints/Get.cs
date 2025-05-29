@@ -6,7 +6,7 @@ internal static class Get
 {
     public static IEndpointRouteBuilder MapGet(this IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapGet("/weather-forecast", (ITelemetry<WeatherForecast> telemetry) =>
+        endpoints.MapGet("/weather-forecast", (WeatherForecastTelemetry telemetry) =>
         {
             using var activity = telemetry.ActivitySource.StartActivity(name: "weather_forecast.request");
 
