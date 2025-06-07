@@ -9,7 +9,7 @@ public class TelemetryOptions
     } = string.Empty;
 
     public string? Version { get; set; }
-    public IEnumerable<KeyValuePair<string, object?>>? Tags { get; set; }
+    public Dictionary<string, object?>? Tags { get; set; }
 }
 
 public class TelemetryOptions<TTelemetryService> : TelemetryOptions

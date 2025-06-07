@@ -1,4 +1,5 @@
 ﻿using AspNetCore.Examples.OpenTelemetry.TelemetryServices;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -156,13 +157,27 @@ namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices
     {
         private readonly string? _optionsName;
 
-        internal TelemetryServiceBuilder(TelemetryBuilder telemetry, string telemetryName, bool useNamedOptions = false)
+        internal TelemetryServiceBuilder(TelemetryBuilder telemetry, string name, bool useNamedOptions = false)
         {
             Telemetry = telemetry;
-            Name = telemetryName;
-            _optionsName = useNamedOptions ? telemetryName : null;
+            Name = name;
+            _optionsName = useNamedOptions ? name : null;
 
-            Configure(options => { });
+            Services.AddOptions<TelemetryOptions<TService>>(_optionsName)
+                .Configure<IServiceProvider>((options, sp) =>
+                {
+                    var config = sp.GetService<IConfiguration>()?
+                        .GetSection("Telemetry")
+                        .GetSection(Name);
+
+                    if (config?.Exists() == true)
+                    {
+                        config.Bind(options);
+                    }
+
+                    options.Name = Name;
+                });
+
             if (!useNamedOptions)
             {
                 Services.TryAddSingleton(sp => sp.GetRequiredService<IOptions<TelemetryOptions<TService>>>().Value);

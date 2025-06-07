@@ -18,7 +18,7 @@ public class TelemetryOptionsData : TheoryData<TelemetryOptions>
         {
             Name = "Name",
             Version = "V1.0",
-            Tags = new Dictionary<string, object?> { { "TagName", "TagValue" } },
+            Tags = new() { { "TagName", "TagValue" } },
         });
     }
 }
@@ -35,7 +35,7 @@ public class NamedTelemetryOptionsData : TheoryData<TelemetryOptions>
         {
             Name = name,
             Version = "V1.0",
-            Tags = new Dictionary<string, object?> { { "TagName", "TagValue" } },
+            Tags = new() { { "TagName", "TagValue" } },
         });
     }
 }
