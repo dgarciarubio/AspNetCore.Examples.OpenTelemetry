@@ -19,16 +19,13 @@ if (builder.Environment.IsDevelopment())
     }));
 }
 
-builder.Services.AddTelemetry(telemetry =>
-{
-    telemetry.Add<ICustomTelemetryService, CustomTelemetryService>()
-        .Configure(o =>
-        {
-            o.Version = "1.0";
-            o.Tags = [new("Tag1", "Value1"), new("Tag2", "Value2")];
-        })
-        .AddToOpenTelemetryProviders();
-});
+builder.Services.AddTelemetry<CustomTelemetryService>()
+    .Configure(o =>
+    {
+        o.Version = "1.0";
+        o.Tags = [new("Tag1", "Value1"), new("Tag2", "Value2")];
+    })
+    .AddToOpenTelemetryProviders();
 
 var app = builder.Build();
 
@@ -41,7 +38,7 @@ if (app.Environment.IsDevelopment())
 
 app.MapDefaultEndpoints();
 
-app.MapGet("/telemetry", async (ICustomTelemetryService telemetry, int delay = 0) =>
+app.MapGet("/telemetry", async (CustomTelemetryService telemetry, int delay = 0) =>
 {
     using var _ = telemetry.ActivitySource.StartActivity(name: "telemetry.sample");
     telemetry.Logger.LogInformation("Telemetry endpoint called with delay = {delay}", delay);
@@ -50,24 +47,9 @@ app.MapGet("/telemetry", async (ICustomTelemetryService telemetry, int delay = 0
     telemetry.Delay.Record(delay);
 });
 
-app.MapGet("/telemetry/unregistered", async (ITelemetry<UnregisteredTelemetryName> telemetry, int delay = 0) =>
-{
-    using var _ = telemetry.ActivitySource.StartActivity(name: "telemetry.unregistered");
-    telemetry.Logger.LogInformation("Telemetry endpoint called with delay = {delay}", delay);
-    await Task.Delay(delay);
-    telemetry.Meter.CreateCounter<int>("telemetry.unregistered.calls").Add(1);
-    telemetry.Meter.CreateHistogram<int>("telemetry.unregistered.delay").Record(delay);
-});
-
 app.Run();
 
-internal interface ICustomTelemetryService : ITelemetry<TelemetryName>
-{
-    Counter<int> Calls { get; }
-    Histogram<int> Delay { get; }
-}
-
-internal class CustomTelemetryService : Telemetry<TelemetryName>, ICustomTelemetryService
+internal class CustomTelemetryService : Telemetry<TelemetryName>
 {
     public CustomTelemetryService(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<CustomTelemetryService> options)
         : base(loggerFactory, meterFactory, options)
@@ -81,5 +63,3 @@ internal class CustomTelemetryService : Telemetry<TelemetryName>, ICustomTelemet
 }
 
 internal class TelemetryName { }
-
-internal class UnregisteredTelemetryName { }

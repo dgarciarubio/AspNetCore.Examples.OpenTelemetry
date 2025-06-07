@@ -4,7 +4,6 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Diagnostics.Metrics;
-using System.Xml.Linq;
 
 #pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace Microsoft.Extensions.DependencyInjection
@@ -26,6 +25,31 @@ namespace Microsoft.Extensions.DependencyInjection
 
             return services;
         }
+
+        public static TelemetryServiceBuilder<Telemetry> AddTelemetryFor(this IServiceCollection services, string name)
+            => new TelemetryBuilder(services).For(name);
+
+        public static TelemetryServiceBuilder<Telemetry<TTelemetryName>> AddTelemetryFor<TTelemetryName>(this IServiceCollection services)
+            => new TelemetryBuilder(services).For<TTelemetryName>();
+
+        public static TelemetryServiceBuilder<TService> AddTelemetry<TService>(this IServiceCollection services)
+            where TService : class, ITelemetry
+            => new TelemetryBuilder(services).Add<TService>();
+
+        public static TelemetryServiceBuilder<TImplementation> AddTelemetry<TService, TImplementation>(this IServiceCollection services)
+            where TService : class, ITelemetry
+            where TImplementation : class, TService
+            => new TelemetryBuilder(services).Add<TService, TImplementation>();
+
+        public static TelemetryServiceBuilder<TService> AddTelemetry<TService>(this IServiceCollection services, string name)
+            where TService : class, ITelemetry
+            => new TelemetryBuilder(services).Add<TService>(name);
+
+        public static TelemetryServiceBuilder<TImplementation> AddTelemetry<TService, TImplementation>(this IServiceCollection services, string name)
+            where TService : class, ITelemetry
+            where TImplementation : class, TService
+            => new TelemetryBuilder(services).Add<TService, TImplementation>(name);
+
     }
 }
 
@@ -33,14 +57,14 @@ namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices
 {
     public class TelemetryBuilder
     {
-        public IServiceCollection Services { get; }
-
         internal TelemetryBuilder(IServiceCollection services)
         {
             Services = services;
         }
 
-        public TelemetryServiceBuilder<Telemetry> AddFor(string name)
+        public IServiceCollection Services { get; }
+
+        public TelemetryServiceBuilder<Telemetry> For(string name)
         {
             ArgumentNullException.ThrowIfNull(name, nameof(name));
 
@@ -52,10 +76,10 @@ namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices
                 var options = sp.GetRequiredService<IOptionsMonitor<TelemetryOptions<Telemetry>>>().Get(name);
                 return new Telemetry(loggerFactory, meterFactory, options);
             });
-            return new TelemetryServiceBuilder<Telemetry>(Services, name, useNamedOptions: true);
+            return new TelemetryServiceBuilder<Telemetry>(this, name, useNamedOptions: true);
         }
 
-        public TelemetryServiceBuilder<Telemetry<TTelemetryName>> AddFor<TTelemetryName>()
+        public TelemetryServiceBuilder<Telemetry<TTelemetryName>> For<TTelemetryName>()
         {
             Services.TryAddSingleton(typeof(ITelemetry<TTelemetryName>), sp =>
             {
@@ -64,7 +88,7 @@ namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices
                 var options = sp.GetRequiredService<TelemetryOptions<Telemetry<TTelemetryName>>>();
                 return new Telemetry<TTelemetryName>(loggerFactory, meterFactory, options);
             });
-            return new TelemetryServiceBuilder<Telemetry<TTelemetryName>>(Services, Telemetry<TTelemetryName>.Name);
+            return new TelemetryServiceBuilder<Telemetry<TTelemetryName>>(this, Telemetry<TTelemetryName>.Name);
         }
 
         public TelemetryServiceBuilder<TService> Add<TService>()
@@ -104,7 +128,7 @@ namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices
                 Services.TryAddSingleton(genericTelemetryInterface, sp => sp.GetRequiredService<TService>());
             }
 
-            return new TelemetryServiceBuilder<TImplementation>(Services, name);
+            return new TelemetryServiceBuilder<TImplementation>(this, name);
         }
 
         private static IEnumerable<Type> GetImplementedGenericTelemetryInterfaces(Type type)
@@ -132,9 +156,9 @@ namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices
     {
         private readonly string? _optionsName;
 
-        internal TelemetryServiceBuilder(IServiceCollection services, string telemetryName, bool useNamedOptions = false)
+        internal TelemetryServiceBuilder(TelemetryBuilder telemetry, string telemetryName, bool useNamedOptions = false)
         {
-            Services = services;
+            Telemetry = telemetry;
             Name = telemetryName;
             _optionsName = useNamedOptions ? telemetryName : null;
 
@@ -145,7 +169,8 @@ namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices
             }
         }
 
-        public IServiceCollection Services { get; }
+        public TelemetryBuilder Telemetry { get; }
+        public IServiceCollection Services => Telemetry.Services;
         public string Name { get; }
 
         public TelemetryServiceBuilder<TService> Configure(Action<TelemetryOptions<TService>> configureOptions)
