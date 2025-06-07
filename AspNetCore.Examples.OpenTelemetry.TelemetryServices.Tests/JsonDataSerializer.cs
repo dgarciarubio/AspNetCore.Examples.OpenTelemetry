@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using Xunit.Sdk;
 
-namespace AspNetCore.Examples.OpenTelemetry.TelemetryExtensions.Tests;
+namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices.Tests;
 
 internal class JsonDataSerializer : IXunitSerializer
 {

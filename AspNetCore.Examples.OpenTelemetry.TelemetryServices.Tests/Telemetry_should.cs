@@ -1,9 +1,12 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.Testing.Platform.Extensions.Messages;
 using NSubstitute;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using static AspNetCore.Examples.OpenTelemetry.TelemetryServices.Tests.Generic_telemetry_should;
 
-namespace AspNetCore.Examples.OpenTelemetry.TelemetryExtensions.Tests;
+namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices.Tests;
 
 public class Telemetry_should
 {
@@ -27,32 +30,32 @@ public class Telemetry_should
     [Fact]
     public void Fail_if_null_loggerFactory()
     {
-        Telemetry action() => new(loggerFactory: null!, _meterFactory, new TelemetryOptions("Name"));
+        var action = () => new Telemetry(loggerFactory: null!, _meterFactory, new TelemetryOptions { Name = "Name" });
 
-        var exception = Assert.Throws<ArgumentNullException>((Func<Telemetry>)action);
+        var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal("loggerFactory", exception.ParamName);
     }
 
     [Fact]
     public void Fail_if_null_meterFactory()
     {
-        Telemetry action() => new(_loggerFactory, meterFactory: null!, new TelemetryOptions("Name"));
+        var action = () => new Telemetry(_loggerFactory, meterFactory: null!, new TelemetryOptions { Name = "Name" });
 
-        var exception = Assert.Throws<ArgumentNullException>((Func<Telemetry>)action);
+        var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal("meterFactory", exception.ParamName);
     }
 
     [Fact]
     public void Fail_if_null_options()
     {
-        Telemetry action() => new(_loggerFactory, _meterFactory, options: null!);
+        var action = () => new Telemetry(_loggerFactory, _meterFactory, options: null!);
 
-        var exception = Assert.Throws<ArgumentNullException>((Func<Telemetry>)action);
+        var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal("options", exception.ParamName);
     }
 
     [Theory]
-    [ClassData(typeof(TelemetryOptionsData))]
+    [MemberData(nameof(OptionsData))]
     public void Create_a_logger(TelemetryOptions options)
     {
         var telemetry = new Telemetry(_loggerFactory, _meterFactory, options);
@@ -61,7 +64,7 @@ public class Telemetry_should
     }
 
     [Theory]
-    [ClassData(typeof(TelemetryOptionsData))]
+    [MemberData(nameof(OptionsData))]
     public void Create_an_activity_source(TelemetryOptions options)
     {
         var telemetry = new Telemetry(_loggerFactory, _meterFactory, options);
@@ -71,7 +74,7 @@ public class Telemetry_should
     }
 
     [Theory]
-    [ClassData(typeof(TelemetryOptionsData))]
+    [MemberData(nameof(OptionsData))]
     public void Create_a_meter(TelemetryOptions options)
     {
         var telemetry = new Telemetry(_loggerFactory, _meterFactory, options);
@@ -79,6 +82,8 @@ public class Telemetry_should
         Assert.NotNull(telemetry.Meter);
         Assert.HasOptions(options, telemetry.Meter);
     }
+
+    public static readonly TelemetryOptionsData OptionsData = [];
 }
 
 public class Generic_telemetry_should
@@ -103,34 +108,59 @@ public class Generic_telemetry_should
     [Fact]
     public void Fail_if_null_loggerFactory()
     {
-        Telemetry<TelemetryName> action() => new(loggerFactory: null!, _meterFactory);
+        var action = () => new Telemetry<TelemetryName>(loggerFactory: null!, _meterFactory);
 
-        var exception = Assert.Throws<ArgumentNullException>((Func<Telemetry<TelemetryName>>)action);
+        var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal("loggerFactory", exception.ParamName);
     }
 
     [Fact]
     public void Fail_if_null_meterFactory()
     {
-        Telemetry<TelemetryName> action() => new(_loggerFactory, meterFactory: null!);
+        var action = () => new Telemetry<TelemetryName>(_loggerFactory, meterFactory: null!);
 
-        var exception = Assert.Throws<ArgumentNullException>((Func<Telemetry<TelemetryName>>)action);
+        var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal("meterFactory", exception.ParamName);
     }
 
+    [Fact]
+    public void Fail_if_invalid_options()
+    {
+        var action = () => new Telemetry<TelemetryName>(_loggerFactory, _meterFactory, options: new() { Name = "InvalidName" });
+
+        var exception = Assert.Throws<ArgumentException>(action);
+        Assert.Equal("options", exception.ParamName);
+    }
+
+    [Fact]
+    public void Accept_null_options()
+    {
+        var telemetry = new Telemetry<TelemetryName>(_loggerFactory, _meterFactory, options: null);
+
+        Assert.Equal(Telemetry<TelemetryName>.Name, telemetry.ActivitySource.Name);
+        Assert.Equal(Telemetry<TelemetryName>.Name, telemetry.Meter.Name);
+    }
+
+    [Fact]
+    public void Have_the_expected_name()
+    {
+        var name = Telemetry<TelemetryName>.Name;
+
+        Assert.Equal($"{typeof(Generic_telemetry_should).Namespace}.{nameof(Generic_telemetry_should)}.{nameof(TelemetryName)}", name);
+    }
+
     [Theory]
-    [ClassData(typeof(TelemetryOptionsData<TelemetryName>))]
-    public void Create_a_logger(TelemetryOptions<TelemetryName>? options)
+    [MemberData(nameof(OptionsData))]
+    public void Create_a_logger(TelemetryOptions options)
     {
         var telemetry = new Telemetry<TelemetryName>(_loggerFactory, _meterFactory, options);
 
         Assert.NotNull(telemetry.Logger);
-        Assert.Same(((Telemetry)telemetry).Logger, telemetry.Logger);
     }
 
     [Theory]
-    [ClassData(typeof(TelemetryOptionsData<TelemetryName>))]
-    public void Create_an_activity_source(TelemetryOptions<TelemetryName>? options)
+    [MemberData(nameof(OptionsData))]
+    public void Create_an_activity_source(TelemetryOptions options)
     {
         var telemetry = new Telemetry<TelemetryName>(_loggerFactory, _meterFactory, options);
 
@@ -139,8 +169,8 @@ public class Generic_telemetry_should
     }
 
     [Theory]
-    [ClassData(typeof(TelemetryOptionsData<TelemetryName>))]
-    public void Create_a_meter(TelemetryOptions<TelemetryName>? options)
+    [MemberData(nameof(OptionsData))]
+    public void Create_a_meter(TelemetryOptions options)
     {
         var telemetry = new Telemetry<TelemetryName>(_loggerFactory, _meterFactory, options);
 
@@ -148,5 +178,7 @@ public class Generic_telemetry_should
         Assert.HasOptions(options, telemetry.Meter);
     }
 
-    public class TelemetryName { }
+    public static readonly NamedTelemetryOptionsData OptionsData = new(Telemetry<TelemetryName>.Name);
+
+    private class TelemetryName { }
 }

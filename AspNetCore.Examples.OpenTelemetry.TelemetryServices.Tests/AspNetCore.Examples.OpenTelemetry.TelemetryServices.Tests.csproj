@@ -29,7 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AspNetCore.Examples.OpenTelemetry.TelemetryExtensions\AspNetCore.Examples.OpenTelemetry.TelemetryExtensions.csproj" />
+    <ProjectReference Include="..\AspNetCore.Examples.OpenTelemetry.TelemetryServices\AspNetCore.Examples.OpenTelemetry.TelemetryServices.csproj" />
   </ItemGroup>
 
   <ItemGroup>
