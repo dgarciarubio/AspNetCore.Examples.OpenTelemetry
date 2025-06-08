@@ -3,9 +3,9 @@ using System.Diagnostics.Metrics;
 
 namespace AspNetCore.Examples.OpenTelemetry.Api
 {
-    public static partial class TelemetryEndpointSample
+    public static partial class TelemetryEndpoint
     {
-        public static IServiceCollection AddSampleTelemetryEndpoint(this IServiceCollection services)
+        public static IServiceCollection AddTelemetryEndpoint(this IServiceCollection services)
         {
             services.AddTelemetry<SampleTelemetryService>()
                 .AddToOpenTelemetryProviders();
@@ -13,14 +13,14 @@ namespace AspNetCore.Examples.OpenTelemetry.Api
             return services;
         }
 
-        public static WebApplication MapSampleTelemetryEndpoint(this WebApplication app)
+        public static WebApplication MapTelemetryEndpoint(this WebApplication app)
         {
-            app.MapGet("/telemetry/sample", async (SampleTelemetryService telemetry, int delay = 0) =>
+            app.MapGet("/telemetry", async (SampleTelemetryService telemetry, int delay = 0) =>
             {
                 using var _ = telemetry.ActivitySource.StartActivity(name: "telemetry.sample");
                 await Task.Delay(delay);
 
-                telemetry.Logger.LogTelemetryEndpointCall(delay);
+                telemetry.Logger.LogInformation("Telemetry endpoint called with delay = {delay}", delay);
 
                 telemetry.Calls.Add(1);
                 telemetry.Delay.Record(delay);
@@ -41,9 +41,6 @@ namespace AspNetCore.Examples.OpenTelemetry.Api
             public Counter<int> Calls { get; }
             public Histogram<int> Delay { get; }
         }
-
-        [LoggerMessage(LogLevel.Information, "Telemetry endpoint called with delay = {delay}")]
-        private static partial void LogTelemetryEndpointCall(this ILogger<SampleTelemetryName> logger, int delay);
     }
 
     public class SampleTelemetryName { }

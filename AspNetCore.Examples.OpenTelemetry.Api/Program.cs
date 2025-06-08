@@ -7,9 +7,7 @@ builder.AddServiceDefaults();
 
 builder.Services.AddOpenApi();
 
-builder.Services
-    .AddSampleTelemetryEndpoint()
-    .AddClassicTelemetryEndpoint();
+builder.Services.AddTelemetryEndpoint();
 
 var app = builder.Build();
 
@@ -21,8 +19,7 @@ if (app.Environment.IsDevelopment())
 
 app.MapDefaultEndpoints();
 
-app.MapSampleTelemetryEndpoint();
-app.MapClassicTelemetryEndpoint();
+app.MapTelemetryEndpoint();
 
 app.Run();
 
