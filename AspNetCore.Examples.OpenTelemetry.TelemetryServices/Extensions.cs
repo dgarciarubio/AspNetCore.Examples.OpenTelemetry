@@ -27,10 +27,10 @@ namespace Microsoft.Extensions.DependencyInjection
             return services;
         }
 
-        public static TelemetryServiceBuilder<Telemetry> AddTelemetryFor(this IServiceCollection services, string name)
+        public static TelemetryServiceBuilder<ITelemetry> AddTelemetryFor(this IServiceCollection services, string name)
             => new TelemetryBuilder(services).For(name);
 
-        public static TelemetryServiceBuilder<Telemetry<TTelemetryName>> AddTelemetryFor<TTelemetryName>(this IServiceCollection services)
+        public static TelemetryServiceBuilder<ITelemetry<TTelemetryName>> AddTelemetryFor<TTelemetryName>(this IServiceCollection services)
             => new TelemetryBuilder(services).For<TTelemetryName>();
 
         public static TelemetryServiceBuilder<TService> AddTelemetry<TService>(this IServiceCollection services)
@@ -65,7 +65,7 @@ namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices
 
         public IServiceCollection Services { get; }
 
-        public TelemetryServiceBuilder<Telemetry> For(string name)
+        public TelemetryServiceBuilder<ITelemetry> For(string name)
         {
             ArgumentNullException.ThrowIfNull(name, nameof(name));
 
@@ -74,22 +74,22 @@ namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices
                 var name = (string)key!;
                 var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
                 var meterFactory = sp.GetRequiredService<IMeterFactory>();
-                var options = sp.GetRequiredService<IOptionsMonitor<TelemetryOptions<Telemetry>>>().Get(name);
+                var options = sp.GetRequiredService<IOptionsMonitor<TelemetryOptions<ITelemetry>>>().Get(name);
                 return new Telemetry(loggerFactory, meterFactory, options);
             });
-            return new TelemetryServiceBuilder<Telemetry>(this, name, useNamedOptions: true);
+            return new TelemetryServiceBuilder<ITelemetry>(this, name, useNamedOptions: true);
         }
 
-        public TelemetryServiceBuilder<Telemetry<TTelemetryName>> For<TTelemetryName>()
+        public TelemetryServiceBuilder<ITelemetry<TTelemetryName>> For<TTelemetryName>()
         {
             Services.TryAddSingleton(typeof(ITelemetry<TTelemetryName>), sp =>
             {
                 var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
                 var meterFactory = sp.GetRequiredService<IMeterFactory>();
-                var options = sp.GetRequiredService<TelemetryOptions<Telemetry<TTelemetryName>>>();
+                var options = sp.GetRequiredService<TelemetryOptions<ITelemetry<TTelemetryName>>>();
                 return new Telemetry<TTelemetryName>(loggerFactory, meterFactory, options);
             });
-            return new TelemetryServiceBuilder<Telemetry<TTelemetryName>>(this, Telemetry<TTelemetryName>.Name);
+            return new TelemetryServiceBuilder<ITelemetry<TTelemetryName>>(this, Telemetry<TTelemetryName>.Name);
         }
 
         public TelemetryServiceBuilder<TService> Add<TService>()
@@ -124,7 +124,8 @@ namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices
 
             Services.TryAddSingleton<TService, TImplementation>();
 
-            foreach (var genericTelemetryInterface in GetImplementedGenericTelemetryInterfaces(typeof(TService)))
+            var genericTelemetryInterface = GetImplementedGenericTelemetryInterface(typeof(TService));
+            if (genericTelemetryInterface is not null)
             {
                 Services.TryAddSingleton(genericTelemetryInterface, sp => sp.GetRequiredService<TService>());
             }
@@ -132,10 +133,17 @@ namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices
             return new TelemetryServiceBuilder<TImplementation>(this, name);
         }
 
-        private static IEnumerable<Type> GetImplementedGenericTelemetryInterfaces(Type type)
+        private static Type? GetImplementedGenericTelemetryInterface(Type type)
         {
-            return type.GetInterfaces()
-                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ITelemetry<>));
+            var interfaces = type.GetInterfaces()
+                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ITelemetry<>))
+                .ToArray();
+
+            return interfaces switch
+            {
+                { Length: 1 } => interfaces.Single(),
+                _ => null,
+            };
         }
 
         private static Type? GetBaseGenericTelemetryType(Type? type)
