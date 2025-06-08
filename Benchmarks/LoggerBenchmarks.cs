@@ -46,12 +46,24 @@ public class LoggerBenchmarks : IDisposable
     [Benchmark]
     public void LogStandardCompileTime()
     {
+        using var scope = _standardLogger.BeginScope(new Dictionary<string, object?>
+        {
+            ["Version"] = "1.0",
+            ["Tag1"] = "Value1",
+            ["Tag2"] = "Value2",
+        });
         _standardLogger.LogFrom(nameof(StandardLogger));
     }
 
     [Benchmark]
     public void LogStandard()
     {
+        using var scope = _standardLogger.BeginScope(new Dictionary<string, object?>
+        {
+            ["Version"] = "1.0",
+            ["Tag1"] = "Value1",
+            ["Tag2"] = "Value2",
+        });
         _standardLogger.LogInformation("Log from {LoggerKind}", nameof(StandardLogger));
     }
 
