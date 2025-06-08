@@ -3,19 +3,19 @@ using System.Diagnostics.Metrics;
 
 namespace AspNetCore.Examples.OpenTelemetry.Api
 {
-    public static class TelemetryEndpoint
+    public static class TelemetryEndpointSample
     {
-        public static WebApplicationBuilder AddSampleTelemetryEndpoints(this WebApplicationBuilder builder)
+        public static IServiceCollection AddSampleTelemetryEndpoint(this IServiceCollection services)
         {
-            builder.Services.AddTelemetry<SampleTelemetryService>()
+            services.AddTelemetry<SampleTelemetryService>()
                 .AddToOpenTelemetryProviders();
 
-            return builder;
+            return services;
         }
 
-        public static WebApplication MapSampleTelemetryEndpoints(this WebApplication app)
+        public static WebApplication MapSampleTelemetryEndpoint(this WebApplication app)
         {
-            app.MapGet("/telemetry",
+            app.MapGet("/telemetry/sample",
                 async (SampleTelemetryService telemetry, int delay = 0) =>
                 {
                     using var _ = telemetry.ActivitySource.StartActivity(name: "telemetry.sample");
