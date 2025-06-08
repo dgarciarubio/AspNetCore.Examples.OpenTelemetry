@@ -199,24 +199,18 @@ public class TelemetryBuilder_should
     {
     }
 
-    private class TelemetryService : Telemetry, ITelemetryService
+    private class TelemetryService(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<TelemetryService> options) 
+        : Telemetry(loggerFactory, meterFactory, options), ITelemetryService
     {
-        public TelemetryService(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<TelemetryService> options)
-            : base(loggerFactory, meterFactory, options)
-        {
-        }
     }
 
     private interface IGenericTelemetryService : ITelemetry<TelemetryName>
     {
     }
 
-    private class GenericTelemetryService : Telemetry<TelemetryName>, IGenericTelemetryService
+    private class GenericTelemetryService(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<GenericTelemetryService> options)
+        : Telemetry<TelemetryName>(loggerFactory, meterFactory, options), IGenericTelemetryService
     {
-        public GenericTelemetryService(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<GenericTelemetryService> options)
-            : base(loggerFactory, meterFactory, options)
-        {
-        }
     }
 
     private class TelemetryName { }
