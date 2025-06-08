@@ -23,8 +23,7 @@ public static class OpenTelemetryProviderBuilderExtensions
 
 public static class TelemetryServicesBuilderExtensions
 {
-    public static TelemetryServiceBuilder<TTelemetryService> AddToOpenTelemetryProviders<TTelemetryService>(this TelemetryServiceBuilder<TTelemetryService> builder, bool addSource = true, bool addMeter = true)
-        where TTelemetryService : ITelemetry
+    public static TelemetryServiceBuilder AddToOpenTelemetryProviders(this TelemetryServiceBuilder builder, bool addSource = true, bool addMeter = true)
     {
         if (addSource)
         {

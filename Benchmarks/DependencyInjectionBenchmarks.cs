@@ -15,8 +15,8 @@ public class DependencyInjectionBenchmarks : IDisposable
         _serviceProvider = new ServiceCollection()
             .AddTelemetry(telemetry =>
             {
-                telemetry.For("Name");
-                telemetry.For<TelemetryName>();
+                telemetry.AddFor("Name");
+                telemetry.AddFor<TelemetryName>();
                 telemetry.Add<NamedTelemetryService>("NamedService");
                 telemetry.Add<GenericTelemetryService>();
             })
@@ -32,7 +32,7 @@ public class DependencyInjectionBenchmarks : IDisposable
     [Benchmark]
     public void ResolveMeter()
     {
-        _serviceProvider.GetRequiredService<ILogger<IMeterFactory>>();
+        _serviceProvider.GetRequiredService<IMeterFactory>();
     }
 
     [Benchmark]
@@ -75,12 +75,12 @@ public class DependencyInjectionBenchmarks : IDisposable
 
     private class TelemetryName { }
 
-    private class NamedTelemetryService(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<DependencyInjectionBenchmarks.NamedTelemetryService> options) 
+    private class NamedTelemetryService(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<NamedTelemetryService> options) 
         : Telemetry(loggerFactory, meterFactory, options)
     {
     }
 
-    private class GenericTelemetryService(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<DependencyInjectionBenchmarks.GenericTelemetryService> options)
+    private class GenericTelemetryService(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<GenericTelemetryService> options)
         : Telemetry<TelemetryName>(loggerFactory, meterFactory, options)
     {
     }

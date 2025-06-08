@@ -12,8 +12,8 @@ public class TelemetryOptions
     public Dictionary<string, object?>? Tags { get; set; }
 }
 
-public class TelemetryOptions<TTelemetryService> : TelemetryOptions
-    where TTelemetryService : ITelemetry
+public class TelemetryOptions<TService> : TelemetryOptions
+    where TService : ITelemetry
 {
 }
 

@@ -20,7 +20,7 @@ public class ActivitySourceBenchmarks : IDisposable
         _serviceProvider = new ServiceCollection()
             .AddTelemetry(telemetry =>
             {
-                telemetry.For(nameof(NamedTelemetryActivitySource)).Configure(o =>
+                telemetry.AddFor(nameof(NamedTelemetryActivitySource), o =>
                 {
                     o.Version = "1.0";
                     o.Tags = new()
@@ -29,7 +29,7 @@ public class ActivitySourceBenchmarks : IDisposable
                         ["Tag2"] = "Value2",
                     };
                 });
-                telemetry.For<GenericTelemetryActivitySource>().Configure(o =>
+                telemetry.AddFor<GenericTelemetryActivitySource>(o =>
                 {
                     o.Version = "1.0";
                     o.Tags = new()

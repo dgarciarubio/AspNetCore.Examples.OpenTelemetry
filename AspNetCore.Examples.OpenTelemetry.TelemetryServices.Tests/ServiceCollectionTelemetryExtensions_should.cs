@@ -68,7 +68,7 @@ public class TelemetryBuilder_should
     [MemberData(nameof(OptionsData))]
     public void Configure_telemetry_services_by_name(TelemetryOptions options)
     {
-        _services.AddTelemetryFor(options.Name).Configure(o =>
+        _services.AddTelemetryFor(options.Name, o =>
         {
             o.Version = options.Version;
             o.Tags = options.Tags;
@@ -88,7 +88,7 @@ public class TelemetryBuilder_should
     [MemberData(nameof(OptionsData))]
     public void Configure_specific_telemetry_services_by_name(TelemetryOptions options)
     {
-        _services.AddTelemetry<TelemetryService>(options.Name).Configure(o =>
+        _services.AddTelemetry<TelemetryService>(options.Name, o =>
         {
             o.Version = options.Version;
             o.Tags = options.Tags;
@@ -97,6 +97,7 @@ public class TelemetryBuilder_should
         var serviceProvider = _services.BuildServiceProvider();
         var telemetry = serviceProvider.GetService<TelemetryService>();
         Assert.NotNull(telemetry);
+        Assert.IsType<TelemetryService>(telemetry);
         Assert.NotNull(telemetry.Logger);
         Assert.NotNull(telemetry.ActivitySource);
         Assert.HasOptions(options, telemetry.ActivitySource);
@@ -108,7 +109,7 @@ public class TelemetryBuilder_should
     [MemberData(nameof(OptionsData))]
     public void Configure_specific_interfaced_telemetry_services_by_name(TelemetryOptions options)
     {
-        _services.AddTelemetry<ITelemetryService, TelemetryService>(options.Name).Configure(o =>
+        _services.AddTelemetry<ITelemetryService, TelemetryService>(options.Name, o =>
         {
             o.Version = options.Version;
             o.Tags = options.Tags;
@@ -117,6 +118,7 @@ public class TelemetryBuilder_should
         var serviceProvider = _services.BuildServiceProvider();
         var telemetry = serviceProvider.GetService<ITelemetryService>();
         Assert.NotNull(telemetry);
+        Assert.IsType<TelemetryService>(telemetry);
         Assert.NotNull(telemetry.Logger);
         Assert.NotNull(telemetry.ActivitySource);
         Assert.HasOptions(options, telemetry.ActivitySource);
@@ -128,7 +130,7 @@ public class TelemetryBuilder_should
     [MemberData(nameof(NamedOptionsData))]
     public void Configure_telemetry_services_by_generic_type(TelemetryOptions options)
     {
-        _services.AddTelemetryFor<TelemetryName>().Configure(o =>
+        _services.AddTelemetryFor<TelemetryName>(o =>
         {
             o.Version = options.Version;
             o.Tags = options.Tags;
@@ -148,7 +150,7 @@ public class TelemetryBuilder_should
     [MemberData(nameof(NamedOptionsData))]
     public void Configure_specific_telemetry_services_by_generic_type(TelemetryOptions options)
     {
-        _services.AddTelemetry<GenericTelemetryService>().Configure(o =>
+        _services.AddTelemetry<GenericTelemetryService>(o =>
         {
             o.Version = options.Version;
             o.Tags = options.Tags;
@@ -160,6 +162,7 @@ public class TelemetryBuilder_should
         Assert.NotNull(telemetry);
         Assert.NotNull(genericTelemetry);
         Assert.Same(telemetry, genericTelemetry);
+        Assert.IsType<GenericTelemetryService>(telemetry);
         Assert.NotNull(telemetry.Logger);
         Assert.NotNull(telemetry.ActivitySource);
         Assert.HasOptions(options, telemetry.ActivitySource);
@@ -171,7 +174,7 @@ public class TelemetryBuilder_should
     [MemberData(nameof(NamedOptionsData))]
     public void Configure_specific_interfaced_telemetry_services_by_generic_type(TelemetryOptions options)
     {
-        _services.AddTelemetry<IGenericTelemetryService, GenericTelemetryService>().Configure(o =>
+        _services.AddTelemetry<IGenericTelemetryService, GenericTelemetryService>(o =>
         {
             o.Version = options.Version;
             o.Tags = options.Tags;
@@ -183,6 +186,7 @@ public class TelemetryBuilder_should
         Assert.NotNull(telemetry);
         Assert.NotNull(genericTelemetry);
         Assert.Same(telemetry, genericTelemetry);
+        Assert.IsType<GenericTelemetryService>(telemetry);
         Assert.NotNull(telemetry.Logger);
         Assert.NotNull(telemetry.ActivitySource);
         Assert.HasOptions(options, telemetry.ActivitySource);

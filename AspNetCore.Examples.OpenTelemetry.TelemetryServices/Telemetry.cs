@@ -25,11 +25,14 @@ public class Telemetry : ITelemetry, IDisposable
             version: options.Version,
             tags: options.Tags
         );
+        Options = options;
     }
 
     public ILogger Logger { get; }
     public ActivitySource ActivitySource { get; }
     public Meter Meter { get; }
+
+    internal TelemetryOptions Options { get; } 
 
     protected virtual void Dispose(bool disposing)
     {
@@ -58,27 +61,26 @@ public class Telemetry<TTelemetryName> : Telemetry, ITelemetry<TTelemetryName>, 
         : base(
             loggerFactory,
             meterFactory,
-            Validate(options, out var validatedOptions)
+            SanitizeName(options)
         )
     {
         var logger = loggerFactory.CreateLogger<TTelemetryName>();
-        Logger = OptionsEnrichedLogger<TTelemetryName>.Create(logger, validatedOptions);
+        Logger = OptionsEnrichedLogger<TTelemetryName>.Create(logger, Options);
     }
 
     public new ILogger<TTelemetryName> Logger { get; }
 
-    private static TelemetryOptions Validate(TelemetryOptions? options, out TelemetryOptions optionsResult)
+    private static TelemetryOptions SanitizeName(TelemetryOptions? options)
     {
-        if (options is null)
+        if (options is not null && options.Name != Name)
         {
-            optionsResult = new TelemetryOptions { Name = Name };
-            return optionsResult;
+            throw new ArgumentException("The supplied telemetry options do not have the expected name", nameof(options));
         }
-        if (options.Name != Name)
+        return new TelemetryOptions
         {
-            throw new ArgumentException("The specified telemetry options do not have the expected name", nameof(options));
-        }
-        optionsResult = options;
-        return optionsResult;
+            Name = Name,
+            Tags = options?.Tags,
+            Version = options?.Version,
+        };
     }
 }

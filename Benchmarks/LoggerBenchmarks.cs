@@ -18,15 +18,17 @@ public class LoggerBenchmarks : IDisposable
         _serviceProvider = new ServiceCollection()
             .AddTelemetry(telemetry =>
             {
-                telemetry.For(nameof(NamedTelemetryLogger)).Configure(o => {
+                telemetry.AddFor(nameof(NamedTelemetryLogger), o =>
+                {
                     o.Version = "1.0";
-                    o.Tags = new() 
-                    { 
-                        ["Tag1"] = "Value1", 
-                        ["Tag2"] = "Value2", 
+                    o.Tags = new()
+                    {
+                        ["Tag1"] = "Value1",
+                        ["Tag2"] = "Value2",
                     };
                 });
-                telemetry.For<GenericTelemetryLogger>().Configure(o => {
+                telemetry.AddFor<GenericTelemetryLogger>(o =>
+                {
                     o.Version = "1.0";
                     o.Tags = new()
                     {
@@ -44,19 +46,19 @@ public class LoggerBenchmarks : IDisposable
     }
 
     [Benchmark]
+    public void LogStandard()
+    {
+        _standardLogger.LogInformation("Log from {LoggerKind}", nameof(StandardLogger));
+    }
+
+    [Benchmark]
     public void LogStandardCompileTime()
     {
-        using var scope = _standardLogger.BeginScope(new Dictionary<string, object?>
-        {
-            ["Version"] = "1.0",
-            ["Tag1"] = "Value1",
-            ["Tag2"] = "Value2",
-        });
         _standardLogger.LogFrom(nameof(StandardLogger));
     }
 
     [Benchmark]
-    public void LogStandard()
+    public void LogStandardWithScope()
     {
         using var scope = _standardLogger.BeginScope(new Dictionary<string, object?>
         {
@@ -68,9 +70,15 @@ public class LoggerBenchmarks : IDisposable
     }
 
     [Benchmark]
-    public void LogGenericCompileTime()
+    public void LogStandardCompileTimeWithScope()
     {
-        _genericTelemetryLogger.LogFrom(nameof(GenericTelemetryLogger));
+        using var scope = _standardLogger.BeginScope(new Dictionary<string, object?>
+        {
+            ["Version"] = "1.0",
+            ["Tag1"] = "Value1",
+            ["Tag2"] = "Value2",
+        });
+        _standardLogger.LogFrom(nameof(StandardLogger));
     }
 
     [Benchmark]
@@ -80,15 +88,21 @@ public class LoggerBenchmarks : IDisposable
     }
 
     [Benchmark]
-    public void LogNamedCompileTime()
+    public void LogGenericCompileTime()
     {
-        _namedTelemetryLogger.LogFrom(nameof(NamedTelemetryLogger));
+        _genericTelemetryLogger.LogFrom(nameof(GenericTelemetryLogger));
     }
 
     [Benchmark]
     public void LogNamed()
     {
         _namedTelemetryLogger.LogInformation("Log from {LoggerKind}", nameof(NamedTelemetryLogger));
+    }
+
+    [Benchmark]
+    public void LogNamedCompileTime()
+    {
+        _namedTelemetryLogger.LogFrom(nameof(NamedTelemetryLogger));
     }
 
     public void Dispose()

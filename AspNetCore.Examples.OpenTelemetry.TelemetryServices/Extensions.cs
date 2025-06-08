@@ -27,29 +27,29 @@ namespace Microsoft.Extensions.DependencyInjection
             return services;
         }
 
-        public static TelemetryServiceBuilder<ITelemetry> AddTelemetryFor(this IServiceCollection services, string name)
-            => new TelemetryBuilder(services).For(name);
+        public static TelemetryServiceBuilder AddTelemetryFor(this IServiceCollection services, string name, Action<TelemetryOptions<ITelemetry>>? configureOptions = null)
+            => new TelemetryBuilder(services).AddFor(name, configureOptions);
 
-        public static TelemetryServiceBuilder<ITelemetry<TTelemetryName>> AddTelemetryFor<TTelemetryName>(this IServiceCollection services)
-            => new TelemetryBuilder(services).For<TTelemetryName>();
+        public static TelemetryServiceBuilder AddTelemetryFor<TTelemetryName>(this IServiceCollection services, Action<TelemetryOptions<ITelemetry<TTelemetryName>>>? configureOptions = null)
+            => new TelemetryBuilder(services).AddFor(configureOptions);
 
-        public static TelemetryServiceBuilder<TService> AddTelemetry<TService>(this IServiceCollection services)
+        public static TelemetryServiceBuilder AddTelemetry<TService>(this IServiceCollection services, Action<TelemetryOptions<TService>>? configureOptions = null)
+            where TService : Telemetry
+            => new TelemetryBuilder(services).Add(configureOptions);
+
+        public static TelemetryServiceBuilder AddTelemetry<TService, TImplementation>(this IServiceCollection services, Action<TelemetryOptions<TImplementation>>? configureOptions = null)
             where TService : class, ITelemetry
-            => new TelemetryBuilder(services).Add<TService>();
+            where TImplementation : Telemetry, TService
+            => new TelemetryBuilder(services).Add<TService, TImplementation>(configureOptions);
 
-        public static TelemetryServiceBuilder<TImplementation> AddTelemetry<TService, TImplementation>(this IServiceCollection services)
-            where TService : class, ITelemetry
-            where TImplementation : class, TService
-            => new TelemetryBuilder(services).Add<TService, TImplementation>();
+        public static TelemetryServiceBuilder AddTelemetry<TService>(this IServiceCollection services, string name, Action<TelemetryOptions<TService>>? configureOptions = null)
+            where TService : Telemetry
+            => new TelemetryBuilder(services).Add(name, configureOptions);
 
-        public static TelemetryServiceBuilder<TService> AddTelemetry<TService>(this IServiceCollection services, string name)
+        public static TelemetryServiceBuilder AddTelemetry<TService, TImplementation>(this IServiceCollection services, string name, Action<TelemetryOptions<TImplementation>>? configureOptions = null)
             where TService : class, ITelemetry
-            => new TelemetryBuilder(services).Add<TService>(name);
-
-        public static TelemetryServiceBuilder<TImplementation> AddTelemetry<TService, TImplementation>(this IServiceCollection services, string name)
-            where TService : class, ITelemetry
-            where TImplementation : class, TService
-            => new TelemetryBuilder(services).Add<TService, TImplementation>(name);
+            where TImplementation : Telemetry, TService
+            => new TelemetryBuilder(services).Add<TService, TImplementation>(name, configureOptions);
 
     }
 }
@@ -65,72 +65,113 @@ namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices
 
         public IServiceCollection Services { get; }
 
-        public TelemetryServiceBuilder<ITelemetry> For(string name)
+        public TelemetryServiceBuilder AddFor(string name, Action<TelemetryOptions<ITelemetry>>? configureOptions = null)
         {
             ArgumentNullException.ThrowIfNull(name, nameof(name));
 
+            AddTelemetryOptions(name, configureOptions);
             Services.TryAddKeyedSingleton<ITelemetry>(name, (sp, key) =>
             {
                 var name = (string)key!;
                 var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
                 var meterFactory = sp.GetRequiredService<IMeterFactory>();
-                var options = sp.GetRequiredService<IOptionsMonitor<TelemetryOptions<ITelemetry>>>().Get(name);
+                var options = sp
+                    .GetRequiredService<IOptionsMonitor<TelemetryOptions<ITelemetry>>>()
+                    .Get(name);
                 return new Telemetry(loggerFactory, meterFactory, options);
             });
-            return new TelemetryServiceBuilder<ITelemetry>(this, name, useNamedOptions: true);
+
+            return new TelemetryServiceBuilder(this, name);
         }
 
-        public TelemetryServiceBuilder<ITelemetry<TTelemetryName>> For<TTelemetryName>()
+        public TelemetryServiceBuilder AddFor<TTelemetryName>(Action<TelemetryOptions<ITelemetry<TTelemetryName>>>? configureOptions = null)
         {
+            var name = Telemetry<TTelemetryName>.Name;
+
+            AddTelemetryOptions(name, configureOptions);
             Services.TryAddSingleton(typeof(ITelemetry<TTelemetryName>), sp =>
             {
                 var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
                 var meterFactory = sp.GetRequiredService<IMeterFactory>();
-                var options = sp.GetRequiredService<TelemetryOptions<ITelemetry<TTelemetryName>>>();
+                var options = sp.GetService<TelemetryOptions<ITelemetry<TTelemetryName>>>();
                 return new Telemetry<TTelemetryName>(loggerFactory, meterFactory, options);
             });
-            return new TelemetryServiceBuilder<ITelemetry<TTelemetryName>>(this, Telemetry<TTelemetryName>.Name);
+
+            return new TelemetryServiceBuilder(this, name);
         }
 
-        public TelemetryServiceBuilder<TService> Add<TService>()
-            where TService : class, ITelemetry
+        public TelemetryServiceBuilder Add<TService>(Action<TelemetryOptions<TService>>? configureOptions = null)
+            where TService : Telemetry
         {
-            return Add<TService, TService>();
+            return Add<TService, TService>(configureOptions);
         }
 
-        public TelemetryServiceBuilder<TImplementation> Add<TService, TImplementation>()
+        public TelemetryServiceBuilder Add<TService, TImplementation>(Action<TelemetryOptions<TImplementation>>? configureOptions = null)
             where TService : class, ITelemetry
-            where TImplementation : class, TService
+            where TImplementation : Telemetry, TService
         {
             var genericTelemetryType = GetBaseGenericTelemetryType(typeof(TImplementation))
                 ?? throw new InvalidOperationException("Cannot determine the telemetry name from the specified telemetry service");
 
             var telemetryNameType = genericTelemetryType.GenericTypeArguments.Single();
             var name = TelemetryNameHelper.GetName(telemetryNameType);
-            return Add<TService, TImplementation>(name);
+            return Add<TService, TImplementation>(name, configureOptions);
         }
 
-        public TelemetryServiceBuilder<TService> Add<TService>(string name)
-            where TService : class, ITelemetry
+        public TelemetryServiceBuilder Add<TService>(string name, Action<TelemetryOptions<TService>>? configureOptions = null)
+            where TService : Telemetry
         {
-            return Add<TService, TService>(name);
+            return Add<TService, TService>(name, configureOptions);
         }
 
-        public TelemetryServiceBuilder<TImplementation> Add<TService, TImplementation>(string name)
+        public TelemetryServiceBuilder Add<TService, TImplementation>(string name, Action<TelemetryOptions<TImplementation>>? configureOptions = null)
             where TService : class, ITelemetry
-            where TImplementation : class, TService
+            where TImplementation : Telemetry, TService
         {
             ArgumentNullException.ThrowIfNull(name, nameof(name));
 
-            Services.TryAddSingleton<TService, TImplementation>();
+            var acceptsOptions = typeof(TImplementation).GetConstructors()
+                .Any(c => c.GetParameters()
+                    .Any(p => p.ParameterType == typeof(TelemetryOptions<TImplementation>))
+                );
+            if (acceptsOptions)
+            {
+                AddTelemetryOptions(name, configureOptions);
+            }
 
+            Services.TryAddSingleton<TService, TImplementation>();
             var genericTelemetryInterface = GetImplementedGenericTelemetryInterface(typeof(TService));
             if (genericTelemetryInterface is not null)
             {
                 Services.TryAddSingleton(genericTelemetryInterface, sp => sp.GetRequiredService<TService>());
             }
 
-            return new TelemetryServiceBuilder<TImplementation>(this, name);
+            return new TelemetryServiceBuilder(this, name);
+        }
+
+        private void AddTelemetryOptions<TService>(string name, Action<TelemetryOptions<TService>>? configureOptions)
+            where TService : ITelemetry
+        {
+            Services.AddOptions<TelemetryOptions<TService>>(name)
+                .Configure<IServiceProvider>((options, sp) =>
+                {
+                    sp.GetService<IConfiguration>()?
+                        .GetSection("Telemetry")
+                        .GetSection(name)?
+                        .Bind(options);
+
+                    options.Name = name;
+                    configureOptions?.Invoke(options);
+                    if (options.Name != name)
+                    {
+                        throw new InvalidOperationException("The configured telemetry options do not have the expected name");
+                    }
+                });
+
+            Services.TryAddSingleton(sp => sp
+                .GetRequiredService<IOptionsMonitor<TelemetryOptions<TService>>>()
+                .Get(name)
+            );
         }
 
         private static Type? GetImplementedGenericTelemetryInterface(Type type)
@@ -160,52 +201,17 @@ namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices
         }
     }
 
-    public class TelemetryServiceBuilder<TService>
-        where TService : ITelemetry
+    public class TelemetryServiceBuilder
     {
-        private readonly string? _optionsName;
-
-        internal TelemetryServiceBuilder(TelemetryBuilder telemetry, string name, bool useNamedOptions = false)
+        internal TelemetryServiceBuilder(TelemetryBuilder telemetry, string name)
         {
             Telemetry = telemetry;
             Name = name;
-            _optionsName = useNamedOptions ? name : null;
-
-            Services.AddOptions<TelemetryOptions<TService>>(_optionsName)
-                .Configure<IServiceProvider>((options, sp) =>
-                {
-                    var config = sp.GetService<IConfiguration>()?
-                        .GetSection("Telemetry")
-                        .GetSection(Name);
-
-                    if (config?.Exists() == true)
-                    {
-                        config.Bind(options);
-                    }
-
-                    options.Name = Name;
-                });
-
-            if (!useNamedOptions)
-            {
-                Services.TryAddSingleton(sp => sp.GetRequiredService<IOptions<TelemetryOptions<TService>>>().Value);
-            }
         }
 
         public TelemetryBuilder Telemetry { get; }
         public IServiceCollection Services => Telemetry.Services;
         public string Name { get; }
-
-        public TelemetryServiceBuilder<TService> Configure(Action<TelemetryOptions<TService>> configureOptions)
-        {
-            ArgumentNullException.ThrowIfNull(configureOptions, nameof(configureOptions));
-            Services.Configure<TelemetryOptions<TService>>(_optionsName, options =>
-            {
-                configureOptions(options);
-                options.Name = Name;
-            });
-            return this;
-        }
     }
 }
 

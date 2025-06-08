@@ -22,7 +22,7 @@ public class MeterBenchmarks : IDisposable
         _serviceProvider = new ServiceCollection()
             .AddTelemetry(telemetry =>
             {
-                telemetry.Add<NamedTelemetryMeter>(nameof(NamedTelemetryMeter)).Configure(o =>
+                telemetry.Add<NamedTelemetryMeter>(nameof(NamedTelemetryMeter), o =>
                 {
                     o.Version = "1.0";
                     o.Tags = new()
@@ -31,7 +31,7 @@ public class MeterBenchmarks : IDisposable
                         ["Tag2"] = "Value2",
                     };
                 });
-                telemetry.Add<GenericTelemetryMeter>().Configure(o =>
+                telemetry.Add<GenericTelemetryMeter>(o =>
                 {
                     o.Version = "1.0";
                     o.Tags = new()
