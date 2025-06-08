@@ -8,7 +8,7 @@ namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices.Benchmarks;
 [MemoryDiagnoser]
 public class MeterBenchmarks : IDisposable
 {
-    private static readonly Meter _staticMeter = new Meter(nameof(StaticMeter));
+    private static readonly Meter _staticMeter = new(nameof(StaticMeter));
     private static readonly Counter<int> _staticCounter = _staticMeter.CreateCounter<int>(nameof(StaticMeter));
 
     private readonly ServiceProvider _serviceProvider;
@@ -76,6 +76,7 @@ public class MeterBenchmarks : IDisposable
     {
         _serviceProvider.Dispose();
         _listener.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     private class StaticMeter { }

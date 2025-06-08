@@ -68,25 +68,20 @@ public class DependencyInjectionBenchmarks : IDisposable
     public void Dispose()
     {
         _serviceProvider.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     private class UnregisteredTelemetryName { }
 
     private class TelemetryName { }
 
-    private class NamedTelemetryService : Telemetry
+    private class NamedTelemetryService(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<DependencyInjectionBenchmarks.NamedTelemetryService> options) 
+        : Telemetry(loggerFactory, meterFactory, options)
     {
-        public NamedTelemetryService(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<NamedTelemetryService> options)
-            : base(loggerFactory, meterFactory, options)
-        {
-        }
     }
 
-    private class GenericTelemetryService : Telemetry<TelemetryName>
+    private class GenericTelemetryService(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<DependencyInjectionBenchmarks.GenericTelemetryService> options)
+        : Telemetry<TelemetryName>(loggerFactory, meterFactory, options)
     {
-        public GenericTelemetryService(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<GenericTelemetryService> options)
-            : base(loggerFactory, meterFactory, options)
-        {
-        }
     }
 }

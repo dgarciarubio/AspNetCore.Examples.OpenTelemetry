@@ -39,14 +39,14 @@ namespace AspNetCore.Examples.OpenTelemetry.Api
         {
             public static readonly string Name = $"{typeof(ClassicTelemetryName).Namespace}.{nameof(ClassicTelemetryName)}";
             public static readonly string Version = "1.0";
-            public static readonly Dictionary<string, object?> Tags = new Dictionary<string, object?>
+            public static readonly Dictionary<string, object?> Tags = new()
             {
                 ["Tag1"] = "Value1",
                 ["Tag2"] = "Value2",
             };
 
-            public static readonly ActivitySource ActivitySource = new ActivitySource(Name, Version, Tags);
-            public static readonly Meter Meter = new Meter(Name, Version, Tags);
+            public static readonly ActivitySource ActivitySource = new(Name, Version, Tags);
+            public static readonly Meter Meter = new(Name, Version, Tags);
             public static readonly Counter<int> Calls = Meter.CreateCounter<int>("telemetry.classic.calls");
             public static readonly Histogram<int> Delay = Meter.CreateHistogram<int>("telemetry.classic.delay");
         }

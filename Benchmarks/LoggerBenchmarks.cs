@@ -94,6 +94,7 @@ public class LoggerBenchmarks : IDisposable
     public void Dispose()
     {
         _serviceProvider.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     private class StandardLogger { }

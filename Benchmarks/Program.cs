@@ -6,7 +6,7 @@ var configuration = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json")
     .Build();
 
-var settings = configuration.GetSection("Benchmarks").Get<Dictionary<string, BenchmarkSettings>>() ?? new();
+var settings = configuration.GetSection("Benchmarks").Get<Dictionary<string, BenchmarkSettings>>() ?? [];
 
 var benchmarks = new Type[] {
     typeof(DependencyInjectionBenchmarks),

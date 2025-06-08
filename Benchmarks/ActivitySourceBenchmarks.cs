@@ -7,7 +7,7 @@ namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices.Benchmarks;
 [MemoryDiagnoser]
 public class ActivitySourceBenchmarks : IDisposable
 {
-    private static readonly ActivitySource _staticActivitySource = new ActivitySource(nameof(StaticActivitySource));
+    private static readonly ActivitySource _staticActivitySource = new(nameof(StaticActivitySource));
 
     private readonly ServiceProvider _serviceProvider;
 
@@ -76,6 +76,7 @@ public class ActivitySourceBenchmarks : IDisposable
     {
         _serviceProvider.Dispose();
         _listener.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     private class StaticActivitySource { }

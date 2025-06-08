@@ -15,7 +15,7 @@ namespace AspNetCore.Examples.OpenTelemetry.Api
 
         public static WebApplication MapSampleTelemetryEndpoint(this WebApplication app)
         {
-            app.MapGet("/telemetry/sample",async (SampleTelemetryService telemetry, int delay = 0) =>
+            app.MapGet("/telemetry/sample", async (SampleTelemetryService telemetry, int delay = 0) =>
             {
                 using var _ = telemetry.ActivitySource.StartActivity(name: "telemetry.sample");
                 await Task.Delay(delay);
