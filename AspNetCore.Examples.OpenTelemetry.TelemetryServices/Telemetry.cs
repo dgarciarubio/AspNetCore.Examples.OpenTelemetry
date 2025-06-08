@@ -74,7 +74,7 @@ public class Telemetry<TTelemetryName> : Telemetry, ITelemetry<TTelemetryName>, 
     {
         if (options is not null && options.Name != Name)
         {
-            throw new ArgumentException("The supplied telemetry options do not have the expected name", nameof(options));
+            throw new ArgumentException("The supplied telemetry options do not have the expected name.", nameof(options));
         }
         return new TelemetryOptions
         {

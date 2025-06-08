@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Diagnostics.Metrics;
+using System.Reflection;
 
 #pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace Microsoft.Extensions.DependencyInjection
@@ -14,42 +15,45 @@ namespace Microsoft.Extensions.DependencyInjection
     {
         public static IServiceCollection AddTelemetry(this IServiceCollection services, Action<TelemetryBuilder>? configure = null)
         {
-            ArgumentNullException.ThrowIfNull(services, nameof(services));
-
-            services.AddLogging();
-            services.AddMetrics();
-
-            services.TryAddSingleton(typeof(ITelemetry<>), typeof(Telemetry<>));
-
-            var builder = new TelemetryBuilder(services);
+            var builder = services.AddTelemetry();
             configure?.Invoke(builder);
-
             return services;
         }
 
         public static TelemetryServiceBuilder AddTelemetryFor(this IServiceCollection services, string name, Action<TelemetryOptions<ITelemetry>>? configureOptions = null)
-            => new TelemetryBuilder(services).AddFor(name, configureOptions);
+            => services.AddTelemetry().AddFor(name, configureOptions);
 
         public static TelemetryServiceBuilder AddTelemetryFor<TTelemetryName>(this IServiceCollection services, Action<TelemetryOptions<ITelemetry<TTelemetryName>>>? configureOptions = null)
-            => new TelemetryBuilder(services).AddFor(configureOptions);
+            => services.AddTelemetry().AddFor(configureOptions);
 
         public static TelemetryServiceBuilder AddTelemetry<TService>(this IServiceCollection services, Action<TelemetryOptions<TService>>? configureOptions = null)
             where TService : Telemetry
-            => new TelemetryBuilder(services).Add(configureOptions);
+            => services.AddTelemetry().Add(configureOptions);
 
         public static TelemetryServiceBuilder AddTelemetry<TService, TImplementation>(this IServiceCollection services, Action<TelemetryOptions<TImplementation>>? configureOptions = null)
             where TService : class, ITelemetry
             where TImplementation : Telemetry, TService
-            => new TelemetryBuilder(services).Add<TService, TImplementation>(configureOptions);
+            => services.AddTelemetry().Add<TService, TImplementation>(configureOptions);
 
         public static TelemetryServiceBuilder AddTelemetry<TService>(this IServiceCollection services, string name, Action<TelemetryOptions<TService>>? configureOptions = null)
             where TService : Telemetry
-            => new TelemetryBuilder(services).Add(name, configureOptions);
+            => services.AddTelemetry().Add(name, configureOptions);
 
         public static TelemetryServiceBuilder AddTelemetry<TService, TImplementation>(this IServiceCollection services, string name, Action<TelemetryOptions<TImplementation>>? configureOptions = null)
             where TService : class, ITelemetry
             where TImplementation : Telemetry, TService
-            => new TelemetryBuilder(services).Add<TService, TImplementation>(name, configureOptions);
+            => services.AddTelemetry().Add<TService, TImplementation>(name, configureOptions);
+
+        private static TelemetryBuilder AddTelemetry(this IServiceCollection services)
+        {
+            ArgumentNullException.ThrowIfNull(services, nameof(services));
+
+            services.AddLogging();
+            services.AddMetrics();
+            services.TryAddSingleton(typeof(ITelemetry<>), typeof(Telemetry<>));
+
+            return new TelemetryBuilder(services);
+        }
 
     }
 }
@@ -110,10 +114,7 @@ namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices
             where TService : class, ITelemetry
             where TImplementation : Telemetry, TService
         {
-            var genericTelemetryType = GetBaseGenericTelemetryType(typeof(TImplementation))
-                ?? throw new InvalidOperationException("Cannot determine the telemetry name from the specified telemetry service");
-
-            var telemetryNameType = genericTelemetryType.GenericTypeArguments.Single();
+            var telemetryNameType = GetTelemetryNameType<TImplementation>();
             var name = TelemetryNameHelper.GetName(telemetryNameType);
             return Add<TService, TImplementation>(name, configureOptions);
         }
@@ -130,10 +131,7 @@ namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices
         {
             ArgumentNullException.ThrowIfNull(name, nameof(name));
 
-            var acceptsOptions = typeof(TImplementation).GetConstructors()
-                .Any(c => c.GetParameters()
-                    .Any(p => p.ParameterType == typeof(TelemetryOptions<TImplementation>))
-                );
+            ValidateConstructors(configureOptions, out bool acceptsOptions);
             if (acceptsOptions)
             {
                 AddTelemetryOptions(name, configureOptions);
@@ -164,7 +162,7 @@ namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices
                     configureOptions?.Invoke(options);
                     if (options.Name != name)
                     {
-                        throw new InvalidOperationException("The configured telemetry options do not have the expected name");
+                        throw new InvalidOperationException("The configured telemetry options do not have the expected name.");
                     }
                 });
 
@@ -172,6 +170,44 @@ namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices
                 .GetRequiredService<IOptionsMonitor<TelemetryOptions<TService>>>()
                 .Get(name)
             );
+        }
+
+        private static Type GetTelemetryNameType<TService>()
+        {
+            var genericTelemetryType = GetBaseGenericTelemetryType(typeof(TService));
+            return genericTelemetryType?.GenericTypeArguments.Single() ??
+                throw new InvalidOperationException($"The specified telemetry service is not derived from a generic {nameof(Telemetry<>)}.");
+        }
+
+        private static void ValidateConstructors<TService>(Action<TelemetryOptions<TService>>? configureOptions, out bool acceptsOptions)
+            where TService : Telemetry
+        {
+            var constructors = typeof(TService).GetConstructors();
+            var acceptsValidOptions = constructors.Any(c => c.GetParameters().Any(IsValidOptions));
+            var acceptsInvalidOptions = constructors.Any(c => c.GetParameters().Any(IsInvalidOptions));
+            if (acceptsInvalidOptions)
+            {
+                throw new InvalidOperationException($"The specified telemetry service accepts an unexpected options type. Inject a generic {nameof(TelemetryOptions<>)} object of the telemetry service type itself.");
+            }
+            if (!acceptsValidOptions && configureOptions is not null)
+            {
+                throw new InvalidOperationException("The specified telemetry service does not accept options. It cannot be configured.");
+            }
+
+            acceptsOptions = acceptsValidOptions;
+
+            bool IsValidOptions(ParameterInfo parameter)
+            {
+                return parameter.ParameterType == typeof(TelemetryOptions<TService>);
+            }
+
+            bool IsInvalidOptions(ParameterInfo parameter)
+            {
+                return parameter.ParameterType == typeof(TelemetryOptions) ||
+                    parameter.ParameterType.IsGenericType &&
+                    parameter.ParameterType.GetGenericTypeDefinition() == typeof(TelemetryOptions<>) &&
+                    parameter.ParameterType.GenericTypeArguments.Single() != typeof(TService);
+            }
         }
 
         private static Type? GetImplementedGenericTelemetryInterface(Type type)

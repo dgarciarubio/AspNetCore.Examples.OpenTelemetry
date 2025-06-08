@@ -34,8 +34,8 @@ namespace AspNetCore.Examples.OpenTelemetry.Api
 
         internal class SampleTelemetryService : Telemetry<SampleTelemetryName>
         {
-            public SampleTelemetryService(ILoggerFactory loggerFactory, IMeterFactory meterFactory)
-                : base(loggerFactory, meterFactory)
+            public SampleTelemetryService(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<SampleTelemetryService> options)
+                : base(loggerFactory, meterFactory, options)
             {
                 Calls = Meter.CreateCounter<int>("telemetry.sample.calls", description: "Number of times the endpoint has been called");
                 Delay = Meter.CreateHistogram<double>("telemetry.sample.delay", unit: "ms", description: "Delay in milliseconds of service calls");
