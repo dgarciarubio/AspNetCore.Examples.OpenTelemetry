@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using AspNetCore.Examples.OpenTelemetry.TelemetryServices.Logging;
+using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 
@@ -14,7 +15,8 @@ public class Telemetry : ITelemetry, IDisposable
         ArgumentNullException.ThrowIfNull(meterFactory, nameof(meterFactory));
         ArgumentNullException.ThrowIfNull(options, nameof(options));
 
-        Logger = loggerFactory.CreateLogger(options.Name);
+        var logger = loggerFactory.CreateLogger(options.Name);
+        Logger = OptionsEnrichedLogger.Create(logger, options);
         ActivitySource = new ActivitySource(options.Name,
             version: options.Version,
             tags: options.Tags
@@ -48,7 +50,6 @@ public class Telemetry : ITelemetry, IDisposable
     }
 }
 
-
 public class Telemetry<TTelemetryName> : Telemetry, ITelemetry<TTelemetryName>, IDisposable
 {
     public static string Name { get; } = TelemetryNameHelper.GetName<TTelemetryName>();
@@ -57,25 +58,27 @@ public class Telemetry<TTelemetryName> : Telemetry, ITelemetry<TTelemetryName>, 
         : base(
             loggerFactory,
             meterFactory,
-            Validate(options)
+            Validate(options, out var validatedOptions)
         )
     {
-        Logger = loggerFactory.CreateLogger<TTelemetryName>();
+        var logger = loggerFactory.CreateLogger<TTelemetryName>();
+        Logger = OptionsEnrichedLogger<TTelemetryName>.Create(logger, validatedOptions);
     }
 
     public new ILogger<TTelemetryName> Logger { get; }
 
-    private static TelemetryOptions Validate(TelemetryOptions? options)
+    private static TelemetryOptions Validate(TelemetryOptions? options, out TelemetryOptions optionsResult)
     {
         if (options is null)
         {
-            return new TelemetryOptions { Name = Name };
+            optionsResult = new TelemetryOptions { Name = Name };
+            return optionsResult;
         }
         if (options.Name != Name)
         {
             throw new ArgumentException("The specified telemetry options do not have the expected name", nameof(options));
         }
-        return options;
+        optionsResult = options;
+        return optionsResult;
     }
 }
-
