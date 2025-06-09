@@ -24,7 +24,7 @@ namespace AspNetCore.Examples.OpenTelemetry.Api
                 telemetry.Logger.LogInformation("Telemetry endpoint called");
 
                 await Task.Delay(Random.Shared.Next(100));
-                
+
                 telemetry.Calls.Add(1);
                 telemetry.Delay.Record(Stopwatch.GetElapsedTime(timeStamp).TotalMilliseconds);
             });

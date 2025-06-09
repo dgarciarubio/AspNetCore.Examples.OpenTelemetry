@@ -2,7 +2,7 @@
 
 namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices.Logging;
 
-internal readonly struct EnrichedLogState<T>(IReadOnlyList<KeyValuePair<string, object?>> enrichState, T originalState) 
+internal readonly struct EnrichedLogState<T>(IReadOnlyList<KeyValuePair<string, object?>> enrichState, T originalState)
     : IReadOnlyList<KeyValuePair<string, object?>>
 {
     private readonly IReadOnlyList<KeyValuePair<string, object?>> _enrichState = enrichState;

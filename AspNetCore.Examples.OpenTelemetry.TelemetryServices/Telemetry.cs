@@ -32,7 +32,7 @@ public class Telemetry : ITelemetry, IDisposable
     public ActivitySource ActivitySource { get; }
     public Meter Meter { get; }
 
-    internal TelemetryOptions Options { get; } 
+    internal TelemetryOptions Options { get; }
 
     protected virtual void Dispose(bool disposing)
     {

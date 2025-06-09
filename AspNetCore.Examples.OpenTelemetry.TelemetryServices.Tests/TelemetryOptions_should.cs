@@ -58,7 +58,7 @@ public class TelemetryOptionsTService_should
         Assert.Equal("value", exception.ParamName);
     }
 
-    private class TelemetryService(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<TelemetryService> options) 
+    private class TelemetryService(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<TelemetryService> options)
         : Telemetry(loggerFactory, meterFactory, options)
     {
     }

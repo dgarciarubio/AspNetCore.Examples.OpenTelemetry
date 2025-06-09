@@ -2,10 +2,7 @@ using AspNetCore.Examples.OpenTelemetry.TelemetryServices.Tests;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics.Metrics;
-using Xunit.Internal;
-using Xunit.Sdk;
 
 namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices.Tests;
 
@@ -101,7 +98,7 @@ public class OptionsEnrichedLogger_should
         Assert.NotNull(loggedState);
         Assert.All(originalState, (s, i) =>
         {
-            Assert.Contains(loggedState, ss => 
+            Assert.Contains(loggedState, ss =>
                 ss.Key == s.Key &&
                 ss.Value == s.Value
             );

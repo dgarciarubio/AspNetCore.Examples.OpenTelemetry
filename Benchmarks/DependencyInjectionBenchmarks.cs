@@ -75,7 +75,7 @@ public class DependencyInjectionBenchmarks : IDisposable
 
     private class TelemetryName { }
 
-    private class TelemetryService(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<TelemetryService> options) 
+    private class TelemetryService(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<TelemetryService> options)
         : Telemetry(loggerFactory, meterFactory, options)
     {
     }
