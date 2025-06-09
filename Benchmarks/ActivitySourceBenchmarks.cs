@@ -7,12 +7,12 @@ namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices.Benchmarks;
 [MemoryDiagnoser]
 public class ActivitySourceBenchmarks : IDisposable
 {
-    private static readonly ActivitySource _staticActivitySource = new(nameof(StaticActivitySource));
+    private static readonly ActivitySource _staticSource = new("Static");
 
     private readonly ServiceProvider _serviceProvider;
 
-    private readonly ActivitySource _genericTelemetryActivitySource;
-    private readonly ActivitySource _namedTelemetryActivitySource;
+    private readonly ActivitySource _telemetrySource;
+    private readonly ActivitySource _telemetryOfTNameSource;
     private readonly ActivityListener _listener;
 
     public ActivitySourceBenchmarks()
@@ -20,19 +20,19 @@ public class ActivitySourceBenchmarks : IDisposable
         _serviceProvider = new ServiceCollection()
             .AddTelemetry(telemetry =>
             {
-                telemetry.AddFor(nameof(NamedTelemetryActivitySource), o =>
+                telemetry.AddFor("Name", o =>
                 {
                     o.Version = "1.0";
-                    o.Tags = new()
+                    o.Tags = new Dictionary<string, object?>()
                     {
                         ["Tag1"] = "Value1",
                         ["Tag2"] = "Value2",
                     };
                 });
-                telemetry.AddFor<GenericTelemetryActivitySource>(o =>
+                telemetry.AddFor<TelemetryName>(o =>
                 {
                     o.Version = "1.0";
-                    o.Tags = new()
+                    o.Tags = new Dictionary<string, object?>()
                     {
                         ["Tag1"] = "Value1",
                         ["Tag2"] = "Value2",
@@ -41,8 +41,8 @@ public class ActivitySourceBenchmarks : IDisposable
             })
             .BuildServiceProvider();
 
-        _genericTelemetryActivitySource = _serviceProvider.GetRequiredService<ITelemetry<GenericTelemetryActivitySource>>().ActivitySource;
-        _namedTelemetryActivitySource = _serviceProvider.GetRequiredKeyedService<ITelemetry>(nameof(NamedTelemetryActivitySource)).ActivitySource;
+        _telemetrySource = _serviceProvider.GetRequiredKeyedService<ITelemetry>("Name").ActivitySource;
+        _telemetryOfTNameSource = _serviceProvider.GetRequiredService<ITelemetry<TelemetryName>>().ActivitySource;
 
         _listener = new()
         {
@@ -57,19 +57,19 @@ public class ActivitySourceBenchmarks : IDisposable
     [Benchmark]
     public void ActivityStatic()
     {
-        using var activity = _staticActivitySource.StartActivity(nameof(StaticActivitySource));
+        using var activity = _staticSource.StartActivity("Activity");
     }
 
     [Benchmark]
-    public void ActivityGeneric()
+    public void ActivityOfTName()
     {
-        using var activity = _genericTelemetryActivitySource.StartActivity(nameof(GenericTelemetryActivitySource));
+        using var activity = _telemetryOfTNameSource.StartActivity("Activity");
     }
 
     [Benchmark]
     public void ActivityNamed()
     {
-        using var activity = _namedTelemetryActivitySource.StartActivity(nameof(NamedTelemetryActivitySource));
+        using var activity = _telemetrySource.StartActivity("Activity");
     }
 
     public void Dispose()
@@ -79,9 +79,5 @@ public class ActivitySourceBenchmarks : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private class StaticActivitySource { }
-
-    private class GenericTelemetryActivitySource { }
-
-    private class NamedTelemetryActivitySource { }
+    private class TelemetryName { }
 }

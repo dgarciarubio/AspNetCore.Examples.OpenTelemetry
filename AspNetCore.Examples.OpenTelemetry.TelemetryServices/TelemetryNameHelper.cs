@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 
 namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices;
 
@@ -10,12 +11,7 @@ internal static class TelemetryNameHelper
 
     public static string GetName<TTelemetryName>()
     {
-        return Names.GetOrAdd(typeof(TTelemetryName), (type) =>
-        {
-            var observer = new LoggerFactoryCategoryNameObserver();
-            _ = observer.CreateLogger<TTelemetryName>();
-            return observer.CategoryName!;
-        });
+        return GetName(typeof(TTelemetryName));
     }
 
     public static string GetName(Type telemetryNameType)
@@ -38,8 +34,10 @@ internal static class TelemetryNameHelper
             return NullLogger.Instance;
         }
 
+        [ExcludeFromCodeCoverage]
         public void AddProvider(ILoggerProvider provider) { }
 
+        [ExcludeFromCodeCoverage]
         public void Dispose() { }
     }
 }

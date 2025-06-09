@@ -13,8 +13,8 @@ public class MeterBenchmarks : IDisposable
 
     private readonly ServiceProvider _serviceProvider;
 
-    private readonly Counter<int> _genericTelemetryCounter;
-    private readonly Counter<int> _namedTelemetryCounter;
+    private readonly Counter<int> _telemetryOfTName;
+    private readonly Counter<int> _namedTelemetry;
     private readonly MeterListener _listener;
 
     public MeterBenchmarks()
@@ -22,19 +22,19 @@ public class MeterBenchmarks : IDisposable
         _serviceProvider = new ServiceCollection()
             .AddTelemetry(telemetry =>
             {
-                telemetry.Add<NamedTelemetryMeter>(nameof(NamedTelemetryMeter), o =>
+                telemetry.Add<TelemetryService>("Name", o =>
                 {
                     o.Version = "1.0";
-                    o.Tags = new()
+                    o.Tags = new Dictionary<string, object?>()
                     {
                         ["Tag1"] = "Value1",
                         ["Tag2"] = "Value2",
                     };
                 });
-                telemetry.Add<GenericTelemetryMeter>(o =>
+                telemetry.Add<TelemetryOfTNameService>(o =>
                 {
                     o.Version = "1.0";
-                    o.Tags = new()
+                    o.Tags = new Dictionary<string, object?>()
                     {
                         ["Tag1"] = "Value1",
                         ["Tag2"] = "Value2",
@@ -43,8 +43,8 @@ public class MeterBenchmarks : IDisposable
             })
             .BuildServiceProvider();
 
-        _genericTelemetryCounter = _serviceProvider.GetRequiredService<GenericTelemetryMeter>().Counter;
-        _namedTelemetryCounter = _serviceProvider.GetRequiredService<NamedTelemetryMeter>().Counter;
+        _telemetryOfTName = _serviceProvider.GetRequiredService<TelemetryOfTNameService>().Counter;
+        _namedTelemetry = _serviceProvider.GetRequiredService<TelemetryService>().Counter;
 
         _listener = new()
         {
@@ -61,15 +61,15 @@ public class MeterBenchmarks : IDisposable
     }
 
     [Benchmark]
-    public void MeterGeneric()
+    public void MeterOfTName()
     {
-        _genericTelemetryCounter.Add(1);
+        _telemetryOfTName.Add(1);
     }
 
     [Benchmark]
     public void MeterNamed()
     {
-        _namedTelemetryCounter.Add(1);
+        _namedTelemetry.Add(1);
     }
 
     public void Dispose()
@@ -81,9 +81,9 @@ public class MeterBenchmarks : IDisposable
 
     private class StaticMeter { }
 
-    private class GenericTelemetryMeter : Telemetry<GenericTelemetryMeter>
+    private class TelemetryOfTNameService : Telemetry<TelemetryOfTNameService>
     {
-        public GenericTelemetryMeter(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<GenericTelemetryMeter> options)
+        public TelemetryOfTNameService(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<TelemetryOfTNameService> options)
             : base(loggerFactory, meterFactory, options)
         {
             Counter = Meter.CreateCounter<int>(nameof(Counter));
@@ -92,9 +92,9 @@ public class MeterBenchmarks : IDisposable
         public Counter<int> Counter { get; }
     }
 
-    private class NamedTelemetryMeter : Telemetry
+    private class TelemetryService : Telemetry
     {
-        public NamedTelemetryMeter(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<NamedTelemetryMeter> options)
+        public TelemetryService(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<TelemetryService> options)
             : base(loggerFactory, meterFactory, options)
         {
             Counter = Meter.CreateCounter<int>(nameof(Counter));

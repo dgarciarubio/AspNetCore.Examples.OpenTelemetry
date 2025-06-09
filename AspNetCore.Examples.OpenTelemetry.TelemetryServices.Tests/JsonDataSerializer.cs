@@ -1,6 +1,17 @@
+using AspNetCore.Examples.OpenTelemetry.TelemetryServices;
+using AspNetCore.Examples.OpenTelemetry.TelemetryServices.Tests;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using Xunit.Sdk;
+
+[assembly: RegisterXunitSerializer(typeof(JsonDataSerializer), 
+    typeof(TelemetryOptions),
+    typeof(IEnumerable<KeyValuePair<string, object?>>),
+    typeof(int),
+    typeof(string),
+    typeof(DateTime),
+    typeof(object)
+)]
 
 namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices.Tests;
 

@@ -17,8 +17,8 @@ public class DependencyInjectionBenchmarks : IDisposable
             {
                 telemetry.AddFor("Name");
                 telemetry.AddFor<TelemetryName>();
-                telemetry.Add<NamedTelemetryService>("NamedService");
-                telemetry.Add<GenericTelemetryService>();
+                telemetry.Add<TelemetryService>("NamedService");
+                telemetry.Add<TelemetryOfTNameService>();
             })
             .BuildServiceProvider();
     }
@@ -42,27 +42,27 @@ public class DependencyInjectionBenchmarks : IDisposable
     }
 
     [Benchmark]
-    public void ResolveUnregistered()
+    public void ResolveTelemetryOfUnregisteredName()
     {
         _serviceProvider.GetRequiredService<ITelemetry<UnregisteredTelemetryName>>();
     }
 
     [Benchmark]
-    public void ResolveGeneric()
+    public void ResolveTelemetryOfTName()
     {
         _serviceProvider.GetRequiredService<ITelemetry<TelemetryName>>();
     }
 
     [Benchmark]
-    public void ResolveService()
+    public void ResolveTelemetryService()
     {
-        _serviceProvider.GetRequiredService<NamedTelemetryService>();
+        _serviceProvider.GetRequiredService<TelemetryService>();
     }
 
     [Benchmark]
-    public void ResolveGenericService()
+    public void ResolveTelemetryOfTNameService()
     {
-        _serviceProvider.GetRequiredService<GenericTelemetryService>();
+        _serviceProvider.GetRequiredService<TelemetryOfTNameService>();
     }
 
     public void Dispose()
@@ -75,12 +75,12 @@ public class DependencyInjectionBenchmarks : IDisposable
 
     private class TelemetryName { }
 
-    private class NamedTelemetryService(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<NamedTelemetryService> options) 
+    private class TelemetryService(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<TelemetryService> options) 
         : Telemetry(loggerFactory, meterFactory, options)
     {
     }
 
-    private class GenericTelemetryService(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<GenericTelemetryService> options)
+    private class TelemetryOfTNameService(ILoggerFactory loggerFactory, IMeterFactory meterFactory, TelemetryOptions<TelemetryOfTNameService> options)
         : Telemetry<TelemetryName>(loggerFactory, meterFactory, options)
     {
     }

@@ -9,52 +9,52 @@ public class LoggerBenchmarks : IDisposable
 {
     private readonly ServiceProvider _serviceProvider;
 
-    private readonly ILogger<StandardLogger> _standardLogger;
-    private readonly ILogger<GenericTelemetryLogger> _genericTelemetryLogger;
-    private readonly ILogger _namedTelemetryLogger;
+    private readonly ILogger<StandardLoggerName> _standardLogger;
+    private readonly ILogger<TelemetryName> _telemetryOfTName;
+    private readonly ILogger _namedTelemetry;
 
     public LoggerBenchmarks()
     {
         _serviceProvider = new ServiceCollection()
+            .AddLogging(l => l.AddProvider(LoggingListener.Instance))
             .AddTelemetry(telemetry =>
             {
-                telemetry.AddFor(nameof(NamedTelemetryLogger), o =>
+                telemetry.AddFor("Name", o =>
                 {
                     o.Version = "1.0";
-                    o.Tags = new()
+                    o.Tags = new Dictionary<string, object?>()
                     {
                         ["Tag1"] = "Value1",
                         ["Tag2"] = "Value2",
                     };
                 });
-                telemetry.AddFor<GenericTelemetryLogger>(o =>
+                telemetry.AddFor<TelemetryName>(o =>
                 {
                     o.Version = "1.0";
-                    o.Tags = new()
+                    o.Tags = new Dictionary<string, object?>()
                     {
                         ["Tag1"] = "Value1",
                         ["Tag2"] = "Value2",
                     };
                 });
             })
-            .AddLogging(l => l.AddProvider(LoggingListener.Instance))
             .BuildServiceProvider();
 
-        _standardLogger = _serviceProvider.GetRequiredService<ILogger<StandardLogger>>();
-        _genericTelemetryLogger = _serviceProvider.GetRequiredService<ITelemetry<GenericTelemetryLogger>>().Logger;
-        _namedTelemetryLogger = _serviceProvider.GetRequiredKeyedService<ITelemetry>(nameof(NamedTelemetryLogger)).Logger;
+        _standardLogger = _serviceProvider.GetRequiredService<ILogger<StandardLoggerName>>();
+        _telemetryOfTName = _serviceProvider.GetRequiredService<ITelemetry<TelemetryName>>().Logger;
+        _namedTelemetry = _serviceProvider.GetRequiredKeyedService<ITelemetry>("Name").Logger;
     }
 
     [Benchmark]
     public void LogStandard()
     {
-        _standardLogger.LogInformation("Log from {LoggerKind}", nameof(StandardLogger));
+        _standardLogger.LogInformation("Log from {LoggerKind}", nameof(StandardLoggerName));
     }
 
     [Benchmark]
-    public void LogStandardCompileTime()
+    public void LogStandardHighPerf()
     {
-        _standardLogger.LogFrom(nameof(StandardLogger));
+        _standardLogger.LogFrom(nameof(StandardLoggerName));
     }
 
     [Benchmark]
@@ -66,11 +66,11 @@ public class LoggerBenchmarks : IDisposable
             ["Tag1"] = "Value1",
             ["Tag2"] = "Value2",
         });
-        _standardLogger.LogInformation("Log from {LoggerKind}", nameof(StandardLogger));
+        _standardLogger.LogInformation("Log from {LoggerKind}", nameof(StandardLoggerName));
     }
 
     [Benchmark]
-    public void LogStandardCompileTimeWithScope()
+    public void LogStandardHighPerfWithScope()
     {
         using var scope = _standardLogger.BeginScope(new Dictionary<string, object?>
         {
@@ -78,31 +78,31 @@ public class LoggerBenchmarks : IDisposable
             ["Tag1"] = "Value1",
             ["Tag2"] = "Value2",
         });
-        _standardLogger.LogFrom(nameof(StandardLogger));
+        _standardLogger.LogFrom(nameof(StandardLoggerName));
     }
 
     [Benchmark]
-    public void LogGeneric()
+    public void LogTelemetryOfTName()
     {
-        _genericTelemetryLogger.LogInformation("Log from {LoggerKind}", nameof(GenericTelemetryLogger));
+        _telemetryOfTName.LogInformation("Log from {LoggerKind}", nameof(TelemetryName));
     }
 
     [Benchmark]
-    public void LogGenericCompileTime()
+    public void LogTelemetryOfTNameHighPerf()
     {
-        _genericTelemetryLogger.LogFrom(nameof(GenericTelemetryLogger));
+        _telemetryOfTName.LogFrom(nameof(TelemetryName));
     }
 
     [Benchmark]
     public void LogNamed()
     {
-        _namedTelemetryLogger.LogInformation("Log from {LoggerKind}", nameof(NamedTelemetryLogger));
+        _namedTelemetry.LogInformation("Log from {LoggerKind}", "named");
     }
 
     [Benchmark]
-    public void LogNamedCompileTime()
+    public void LogNamedHighPerf()
     {
-        _namedTelemetryLogger.LogFrom(nameof(NamedTelemetryLogger));
+        _namedTelemetry.LogFrom("named");
     }
 
     public void Dispose()
@@ -111,11 +111,9 @@ public class LoggerBenchmarks : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private class StandardLogger { }
+    private class StandardLoggerName { }
 
-    private class GenericTelemetryLogger { }
-
-    private class NamedTelemetryLogger { }
+    private class TelemetryName { }
 
     private class LoggingListener : ILoggerProvider
     {

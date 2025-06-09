@@ -1,10 +1,7 @@
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Microsoft.Testing.Platform.Extensions.Messages;
 using NSubstitute;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
-using static AspNetCore.Examples.OpenTelemetry.TelemetryServices.Tests.Generic_telemetry_should;
 
 namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices.Tests;
 
@@ -58,41 +55,130 @@ public class Telemetry_should
     [MemberData(nameof(OptionsData))]
     public void Create_a_logger(TelemetryOptions options)
     {
-        var telemetry = new Telemetry(_loggerFactory, _meterFactory, options);
+        using var telemetry = new Telemetry(_loggerFactory, _meterFactory, options);
 
         Assert.NotNull(telemetry.Logger);
+    }
+
+    [Fact]
+    public void Create_logs()
+    {
+        var options = new TelemetryOptions { Name = "Name" };
+        string? loggedCategoryName = null;
+        string? loggedValue = null;
+        using var listener = new LoggingListener();
+        listener.Logged += (data) =>
+        {
+            loggedCategoryName = data.CategoryName;
+            loggedValue = data.Message;
+        };
+
+        using var telemetry = new Telemetry(listener, _meterFactory, options);
+        telemetry.Logger.LogDebug("Log");
+
+        Assert.NotNull(loggedValue);
+        Assert.NotNull(loggedCategoryName);
+        Assert.Equal(options.Name, loggedCategoryName);
     }
 
     [Theory]
     [MemberData(nameof(OptionsData))]
     public void Create_an_activity_source(TelemetryOptions options)
     {
-        var telemetry = new Telemetry(_loggerFactory, _meterFactory, options);
+        using var telemetry = new Telemetry(_loggerFactory, _meterFactory, options);
 
         Assert.NotNull(telemetry.ActivitySource);
         Assert.HasOptions(options, telemetry.ActivitySource);
+    }
+
+    [Fact]
+    public void Create_activities()
+    {
+        var options = new TelemetryOptions { Name = "Name" };
+        Activity? startedActivity = null;
+        using var listener = new ActivityListener()
+        {
+            ShouldListenTo = source => source.Name == options.Name,
+            Sample = (ref _) => ActivitySamplingResult.AllData,
+            ActivityStarted = activity => startedActivity = activity,
+        };
+        ActivitySource.AddActivityListener(listener);
+
+        using var telemetry = new Telemetry(_loggerFactory, _meterFactory, options);
+        using var activity = telemetry.ActivitySource.StartActivity();
+
+        Assert.NotNull(startedActivity);
+        Assert.Same(activity, startedActivity);
     }
 
     [Theory]
     [MemberData(nameof(OptionsData))]
     public void Create_a_meter(TelemetryOptions options)
     {
-        var telemetry = new Telemetry(_loggerFactory, _meterFactory, options);
+        using var telemetry = new Telemetry(_loggerFactory, _meterFactory, options);
 
         Assert.NotNull(telemetry.Meter);
         Assert.HasOptions(options, telemetry.Meter);
     }
 
+    [Fact]
+    public void Create_metrics()
+    {
+        var options = new TelemetryOptions { Name = "Name" };
+        int? recordedMeasurement = null;
+        using var listener = new MeterListener()
+        {
+            InstrumentPublished = (instrument, listener) => listener.EnableMeasurementEvents(instrument),
+        };
+        listener.SetMeasurementEventCallback<int>((_, measurement, _, _) => recordedMeasurement = measurement);
+        listener.Start();
+
+        using var telemetry = new Telemetry(_loggerFactory, _meterFactory, options);
+        telemetry.Meter.CreateCounter<int>("Counter").Add(1);
+
+        Assert.NotNull(recordedMeasurement);
+    }
+
+    [Fact]
+    public void Dispose_related_telemetry_elements()
+    {
+        var options = new TelemetryOptions { Name = "Name" };
+        int? recordedMeasurement = null;
+        using var meterListener = new MeterListener()
+        {
+            InstrumentPublished = (instrument, listener) => listener.EnableMeasurementEvents(instrument),
+        };
+        meterListener.SetMeasurementEventCallback<int>((_, measurement, _, _) => recordedMeasurement = measurement);
+        meterListener.Start();
+        Activity? startedActivity = null;
+        using var listener = new ActivityListener()
+        {
+            ShouldListenTo = source => source.Name == options.Name,
+            Sample = (ref _) => ActivitySamplingResult.AllData,
+            ActivityStarted = activity => startedActivity = activity,
+        };
+        ActivitySource.AddActivityListener(listener);
+
+        var telemetry = new Telemetry(_loggerFactory, _meterFactory, options);
+        telemetry.Dispose();
+        telemetry.Meter.CreateCounter<int>("Counter").Add(1);
+        using var activity = telemetry.ActivitySource.StartActivity();
+
+        Assert.Null(recordedMeasurement);
+        Assert.Null(startedActivity);
+        Assert.Null(activity);
+    }
+
     public static readonly TelemetryOptionsData OptionsData = [];
 }
 
-public class Generic_telemetry_should
+public class TelemetryTTelemetryName_should
 {
     private readonly ILogger _logger;
     private readonly ILoggerFactory _loggerFactory;
     private readonly IMeterFactory _meterFactory;
 
-    public Generic_telemetry_should()
+    public TelemetryTTelemetryName_should()
     {
         _logger = Substitute.For<ILogger>();
         _loggerFactory = Substitute.For<ILoggerFactory>();
@@ -103,24 +189,6 @@ public class Generic_telemetry_should
             var options = callInfo.Arg<MeterOptions>();
             return new Meter(options);
         });
-    }
-
-    [Fact]
-    public void Fail_if_null_loggerFactory()
-    {
-        var action = () => new Telemetry<TelemetryName>(loggerFactory: null!, _meterFactory);
-
-        var exception = Assert.Throws<ArgumentNullException>(action);
-        Assert.Equal("loggerFactory", exception.ParamName);
-    }
-
-    [Fact]
-    public void Fail_if_null_meterFactory()
-    {
-        var action = () => new Telemetry<TelemetryName>(_loggerFactory, meterFactory: null!);
-
-        var exception = Assert.Throws<ArgumentNullException>(action);
-        Assert.Equal("meterFactory", exception.ParamName);
     }
 
     [Fact]
@@ -146,7 +214,7 @@ public class Generic_telemetry_should
     {
         var name = Telemetry<TelemetryName>.Name;
 
-        Assert.Equal($"{typeof(Generic_telemetry_should).Namespace}.{nameof(Generic_telemetry_should)}.{nameof(TelemetryName)}", name);
+        Assert.Equal($"{typeof(TelemetryTTelemetryName_should).Namespace}.{nameof(TelemetryTTelemetryName_should)}.{nameof(TelemetryName)}", name);
     }
 
     [Theory]
@@ -158,27 +226,29 @@ public class Generic_telemetry_should
         Assert.NotNull(telemetry.Logger);
     }
 
-    [Theory]
-    [MemberData(nameof(OptionsData))]
-    public void Create_an_activity_source(TelemetryOptions options)
+    [Fact]
+    public void Create_logs()
     {
-        var telemetry = new Telemetry<TelemetryName>(_loggerFactory, _meterFactory, options);
+        string? loggedCategoryName = null;
+        string? loggedValue = null;
+        using var listener = new LoggingListener();
+        listener.Logged += (data) =>
+        {
+            loggedCategoryName = data.CategoryName;
+            loggedValue = data.Message;
+        };
 
-        Assert.NotNull(telemetry.ActivitySource);
-        Assert.HasOptions(options, telemetry.ActivitySource);
+        using var telemetry = new Telemetry<TelemetryName>(listener, _meterFactory);
+        telemetry.Logger.LogDebug("Log");
+
+        Assert.NotNull(loggedValue);
+        Assert.NotNull(loggedCategoryName);
+        Assert.Equal(Telemetry<TelemetryName>.Name, loggedCategoryName);
     }
 
-    [Theory]
-    [MemberData(nameof(OptionsData))]
-    public void Create_a_meter(TelemetryOptions options)
-    {
-        var telemetry = new Telemetry<TelemetryName>(_loggerFactory, _meterFactory, options);
-
-        Assert.NotNull(telemetry.Meter);
-        Assert.HasOptions(options, telemetry.Meter);
-    }
-
-    public static readonly NamedTelemetryOptionsData OptionsData = new(Telemetry<TelemetryName>.Name);
+    public static readonly TelemetryOptionsData OptionsData = new(Telemetry<TelemetryName>.Name);
 
     private class TelemetryName { }
 }
+
+
