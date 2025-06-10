@@ -8,7 +8,6 @@
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
     <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
     <LangVersion>preview</LangVersion>
-    <RootNamespace>AspNetCore.Examples.OpenTelemetry.TelemetryServices.Tests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

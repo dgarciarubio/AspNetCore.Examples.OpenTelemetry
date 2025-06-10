@@ -15,17 +15,18 @@ public class Telemetry : ITelemetry, IDisposable
         ArgumentNullException.ThrowIfNull(meterFactory, nameof(meterFactory));
         ArgumentNullException.ThrowIfNull(options, nameof(options));
 
-        var logger = loggerFactory.CreateLogger(options.Name);
-        Logger = OptionsEnrichedLogger.Create(logger, options);
-        ActivitySource = new ActivitySource(options.Name,
-            version: options.Version,
-            tags: options.Tags
-        );
-        Meter = meterFactory.Create(options.Name,
-            version: options.Version,
-            tags: options.Tags
-        );
         Options = options;
+
+        var logger = loggerFactory.CreateLogger(Options.Logger.Name);
+        Logger = OptionsEnrichedLogger.Create(logger, Options.Logger);
+        ActivitySource = new ActivitySource(Options.ActivitySource.Name,
+            version: Options.ActivitySource.Version,
+            tags: Options.ActivitySource.Tags
+        );
+        Meter = meterFactory.Create(Options.Meter.Name,
+            version: Options.Meter.Version,
+            tags: Options.Meter.Tags
+        );
     }
 
     public ILogger Logger { get; }
@@ -65,22 +66,21 @@ public class Telemetry<TTelemetryName> : Telemetry, ITelemetry<TTelemetryName>, 
         )
     {
         var logger = loggerFactory.CreateLogger<TTelemetryName>();
-        Logger = OptionsEnrichedLogger<TTelemetryName>.Create(logger, Options);
+        Logger = OptionsEnrichedLogger<TTelemetryName>.Create(logger, Options.Logger);
     }
 
     public new ILogger<TTelemetryName> Logger { get; }
 
     private static TelemetryOptions SanitizeName(TelemetryOptions? options)
     {
-        if (options is not null && options.Name != Name)
+        if (options is null)
+        {
+            return new TelemetryOptions { Name = Name };
+        }
+        if (options.Name != Name)
         {
             throw new ArgumentException("The supplied telemetry options do not have the expected name.", nameof(options));
         }
-        return new TelemetryOptions
-        {
-            Name = Name,
-            Tags = options?.Tags,
-            Version = options?.Version,
-        };
+        return options;
     }
 }

@@ -40,6 +40,30 @@ public class OptionsEnrichedLogger_should
     }
 
     [Fact]
+    public void Not_be_used_if_logger_options_not_contain_enrichment_data()
+    {
+        var options = new TelemetryOptions
+        { 
+            Name = "Name", 
+            Version = "1.0",
+            Tags = new Dictionary<string, object?>() { ["Tag"] = "TagValue" },
+            Logger =
+            {
+                Version = null,
+                Tags = null,
+            }
+        };
+        ILogger? loggerCreated = null;
+        using var listener = new LoggingListener();
+        listener.LoggerCreated += (logger) => loggerCreated = logger;
+
+        using var telemetry = new Telemetry(listener, _meterFactory, options);
+
+        Assert.NotNull(loggerCreated);
+        Assert.Same(loggerCreated, telemetry.Logger);
+    }
+
+    [Fact]
     public void Enrich_logs_with_options_version()
     {
         var options = new TelemetryOptions { Name = "Name", Version = "1.0" };

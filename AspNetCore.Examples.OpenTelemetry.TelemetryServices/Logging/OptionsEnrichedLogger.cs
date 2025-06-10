@@ -23,7 +23,7 @@ internal class OptionsEnrichedLogger : ILogger
         _inner.Log(logLevel, eventId, enrichedState, exception, (s, e) => formatter(s.OriginalState, e));
     }
 
-    public static ILogger Create(ILogger inner, TelemetryOptions options)
+    public static ILogger Create(ILogger inner, TelemetryElementOptions options)
     {
         var structuredStateOptions = AsStructuredState(options).ToArray();
         return structuredStateOptions switch
@@ -33,9 +33,9 @@ internal class OptionsEnrichedLogger : ILogger
         };
     }
 
-    protected static IEnumerable<KeyValuePair<string, object?>> AsStructuredState(TelemetryOptions options)
+    protected static IEnumerable<KeyValuePair<string, object?>> AsStructuredState(TelemetryElementOptions options)
     {
-        if (options.Version is not null)
+        if (!string.IsNullOrEmpty(options.Version))
         {
             yield return new(nameof(options.Version), options.Version);
         }
@@ -56,7 +56,7 @@ internal class OptionsEnrichedLogger<TCategoryName> : OptionsEnrichedLogger, ILo
     {
     }
 
-    public static ILogger<TCategoryName> Create(ILogger<TCategoryName> inner, TelemetryOptions options)
+    public static ILogger<TCategoryName> Create(ILogger<TCategoryName> inner, TelemetryElementOptions options)
     {
         var optionsState = AsStructuredState(options).ToArray();
         return optionsState switch

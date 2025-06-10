@@ -88,7 +88,7 @@ public class Telemetry_should
         using var telemetry = new Telemetry(_loggerFactory, _meterFactory, options);
 
         Assert.NotNull(telemetry.ActivitySource);
-        Assert.HasOptions(options, telemetry.ActivitySource);
+        Assert.HasOptions(options.ActivitySource, telemetry.ActivitySource);
     }
 
     [Fact]
@@ -118,7 +118,7 @@ public class Telemetry_should
         using var telemetry = new Telemetry(_loggerFactory, _meterFactory, options);
 
         Assert.NotNull(telemetry.Meter);
-        Assert.HasOptions(options, telemetry.Meter);
+        Assert.HasOptions(options.Meter, telemetry.Meter);
     }
 
     [Fact]

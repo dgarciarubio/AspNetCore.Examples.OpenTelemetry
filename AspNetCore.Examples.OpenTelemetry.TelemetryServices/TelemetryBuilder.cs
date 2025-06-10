@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Diagnostics.Metrics;
 using System.Reflection;
+using static System.Collections.Specialized.BitVector32;
 
 namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices
 {
@@ -111,7 +112,7 @@ namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices
                     }
                 });
 
-            Services.TryAddSingleton(sp => sp
+            Services.TryAddTransient(sp => sp
                 .GetRequiredService<IOptionsMonitor<TelemetryOptions<TService>>>()
                 .Get(name)
             );
@@ -125,8 +126,22 @@ namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices
                 if (section is not null)
                 {
                     section.Bind(options);
-                    options.Tags = section.GetSection(nameof(TelemetryOptions.Tags))
+                    options.Tags = section
+                        .GetSection(nameof(TelemetryOptions.Tags))
                         .Get<Dictionary<string, object?>>();
+                    BindTagsFromConfiguration(options.Logger, section.GetSection(nameof(TelemetryOptions.Logger)));
+                    BindTagsFromConfiguration(options.ActivitySource, section.GetSection(nameof(TelemetryOptions.ActivitySource)));
+                    BindTagsFromConfiguration(options.Meter, section.GetSection(nameof(TelemetryOptions.Meter)));
+                }
+            }
+
+            void BindTagsFromConfiguration(TelemetryElementOptions options, IConfigurationSection configuration)
+            {
+                var tagsSection = configuration
+                    .GetSection(nameof(TelemetryElementOptions.Tags));
+                if (tagsSection.Exists())
+                {
+                    options.Tags = tagsSection.Get<Dictionary<string, object?>>();
                 }
             }
         }

@@ -130,9 +130,9 @@ public class TelemetryBuilder_should
         Assert.NotNull(telemetry);
         Assert.NotNull(telemetry.Logger);
         Assert.NotNull(telemetry.ActivitySource);
-        Assert.HasOptions(options, telemetry.ActivitySource);
+        Assert.HasOptions(options.ActivitySource, telemetry.ActivitySource);
         Assert.NotNull(telemetry.Meter);
-        Assert.HasOptions(options, telemetry.Meter);
+        Assert.HasOptions(options.Meter, telemetry.Meter);
     }
 
     [Theory]
@@ -151,9 +151,9 @@ public class TelemetryBuilder_should
         Assert.IsType<TelemetryService>(telemetry);
         Assert.NotNull(telemetry.Logger);
         Assert.NotNull(telemetry.ActivitySource);
-        Assert.HasOptions(options, telemetry.ActivitySource);
+        Assert.HasOptions(options.ActivitySource, telemetry.ActivitySource);
         Assert.NotNull(telemetry.Meter);
-        Assert.HasOptions(options, telemetry.Meter);
+        Assert.HasOptions(options.Meter, telemetry.Meter);
     }
 
     [Theory]
@@ -172,9 +172,9 @@ public class TelemetryBuilder_should
         Assert.IsType<TelemetryService>(telemetry);
         Assert.NotNull(telemetry.Logger);
         Assert.NotNull(telemetry.ActivitySource);
-        Assert.HasOptions(options, telemetry.ActivitySource);
+        Assert.HasOptions(options.ActivitySource, telemetry.ActivitySource);
         Assert.NotNull(telemetry.Meter);
-        Assert.HasOptions(options, telemetry.Meter);
+        Assert.HasOptions(options.Meter, telemetry.Meter);
     }
 
     [Theory]
@@ -192,9 +192,9 @@ public class TelemetryBuilder_should
         Assert.NotNull(telemetry);
         Assert.NotNull(telemetry.Logger);
         Assert.NotNull(telemetry.ActivitySource);
-        Assert.HasOptions(options, telemetry.ActivitySource);
+        Assert.HasOptions(options.ActivitySource, telemetry.ActivitySource);
         Assert.NotNull(telemetry.Meter);
-        Assert.HasOptions(options, telemetry.Meter);
+        Assert.HasOptions(options.Meter, telemetry.Meter);
     }
 
     [Theory]
@@ -216,9 +216,9 @@ public class TelemetryBuilder_should
         Assert.IsType<TelemetryOfTNameService>(telemetry);
         Assert.NotNull(telemetry.Logger);
         Assert.NotNull(telemetry.ActivitySource);
-        Assert.HasOptions(options, telemetry.ActivitySource);
+        Assert.HasOptions(options.ActivitySource, telemetry.ActivitySource);
         Assert.NotNull(telemetry.Meter);
-        Assert.HasOptions(options, telemetry.Meter);
+        Assert.HasOptions(options.Meter, telemetry.Meter);
     }
 
     [Theory]
@@ -240,19 +240,112 @@ public class TelemetryBuilder_should
         Assert.IsType<TelemetryOfTNameService>(telemetry);
         Assert.NotNull(telemetry.Logger);
         Assert.NotNull(telemetry.ActivitySource);
-        Assert.HasOptions(options, telemetry.ActivitySource);
+        Assert.HasOptions(options.ActivitySource, telemetry.ActivitySource);
         Assert.NotNull(telemetry.Meter);
-        Assert.HasOptions(options, telemetry.Meter);
+        Assert.HasOptions(options.Meter, telemetry.Meter);
+    }
+
+    [Fact]
+    public void Override_options_configuration_for_logger()
+    {
+        var name = Telemetry<TelemetryName>.Name;
+
+        _services.AddTelemetryFor<TelemetryName>(o =>
+        {
+            o.Logger.Version = "1.0-logger";
+            o.Logger.Tags = new Dictionary<string, object?> { ["Kind"] = "Logger" };
+        });
+
+        var serviceProvider = _services.BuildServiceProvider();
+        var telemetry = serviceProvider.GetService<ITelemetry<TelemetryName>>();
+        var expectedOptions = new TelemetryOptions
+        {
+            Name = name,
+            Logger =
+            {
+                Version = "1.0-logger",
+                Tags = new Dictionary<string, object?> { ["Kind"] = "Logger" }
+            }
+        };
+        Assert.NotNull(telemetry);
+        Assert.NotNull(telemetry.Logger);
+        Assert.NotNull(telemetry.ActivitySource);
+        Assert.HasOptions(expectedOptions.ActivitySource, telemetry.ActivitySource);
+        Assert.NotNull(telemetry.Meter);
+        Assert.HasOptions(expectedOptions.Meter, telemetry.Meter);
+    }
+
+    [Fact]
+    public void Override_options_configuration_for_activity_source()
+    {
+        var name = Telemetry<TelemetryName>.Name;
+
+        _services.AddTelemetryFor<TelemetryName>(o =>
+        {
+            o.ActivitySource.Version = "1.0-activity-source";
+            o.ActivitySource.Tags = new Dictionary<string, object?> { ["Kind"] = "ActivitySource" };
+        });
+
+        var serviceProvider = _services.BuildServiceProvider();
+        var telemetry = serviceProvider.GetService<ITelemetry<TelemetryName>>();
+        var expectedOptions = new TelemetryOptions
+        {
+            Name = name,
+            ActivitySource =
+            {
+                Version = "1.0-activity-source",
+                Tags = new Dictionary<string, object?> { ["Kind"] = "ActivitySource" }
+            }
+        };
+        Assert.NotNull(telemetry);
+        Assert.NotNull(telemetry.Logger);
+        Assert.NotNull(telemetry.ActivitySource);
+        Assert.HasOptions(expectedOptions.ActivitySource, telemetry.ActivitySource);
+        Assert.NotNull(telemetry.Meter);
+        Assert.HasOptions(expectedOptions.Meter, telemetry.Meter);
+    }
+
+    [Fact]
+    public void Override_options_configuration_for_meter()
+    {
+        var name = Telemetry<TelemetryName>.Name;
+
+        _services.AddTelemetryFor<TelemetryName>(o =>
+        {
+            o.Meter.Version = "1.0-meter";
+            o.Meter.Tags = new Dictionary<string, object?> { ["Kind"] = "Meter" };
+        });
+
+        var serviceProvider = _services.BuildServiceProvider();
+        var telemetry = serviceProvider.GetService<ITelemetry<TelemetryName>>();
+        var expectedOptions = new TelemetryOptions
+        {
+            Name = name,
+            Meter =
+            {
+                Version = "1.0-meter",
+                Tags = new Dictionary<string, object?> { ["Kind"] = "Meter" }
+            }
+        };
+        Assert.NotNull(telemetry);
+        Assert.NotNull(telemetry.Logger);
+        Assert.NotNull(telemetry.ActivitySource);
+        Assert.HasOptions(expectedOptions.ActivitySource, telemetry.ActivitySource);
+        Assert.NotNull(telemetry.Meter);
+        Assert.HasOptions(expectedOptions.Meter, telemetry.Meter);
     }
 
     [Fact]
     public void Configure_version_from_configuration()
     {
         var name = Telemetry<TelemetryName>.Name;
-        var configuration = new ConfigurationManager();
+        using var configuration = new ConfigurationManager();
         configuration.AddInMemoryCollection(new Dictionary<string, string?>
         {
             [$"Telemetry:{name}:Version"] = "1.0",
+            [$"Telemetry:{name}:Logger:Version"] = "1.0-logger",
+            [$"Telemetry:{name}:ActivitySource:Version"] = "1.0-activity-source",
+            [$"Telemetry:{name}:Meter:Version"] = "1.0-meter",
         });
         _services.AddSingleton<IConfiguration>(configuration);
 
@@ -260,23 +353,33 @@ public class TelemetryBuilder_should
 
         var serviceProvider = _services.BuildServiceProvider();
         var telemetry = serviceProvider.GetService<ITelemetry<TelemetryName>>();
-        var expectedOptions = new TelemetryOptions { Name = name, Version = "1.0" };
+        var expectedOptions = new TelemetryOptions
+        {
+            Name = name,
+            Version = "1.0",
+            Logger = { Version = "1.0-logger" },
+            ActivitySource = { Version = "1.0-activity-source" },
+            Meter = { Version = "1.0-meter" },
+        };
         Assert.NotNull(telemetry);
         Assert.NotNull(telemetry.Logger);
         Assert.NotNull(telemetry.ActivitySource);
-        Assert.HasOptions(expectedOptions, telemetry.ActivitySource);
+        Assert.HasOptions(expectedOptions.ActivitySource, telemetry.ActivitySource);
         Assert.NotNull(telemetry.Meter);
-        Assert.HasOptions(expectedOptions, telemetry.Meter);
+        Assert.HasOptions(expectedOptions.Meter, telemetry.Meter);
     }
 
     [Fact]
     public void Configure_tags_from_configuration()
     {
         var name = Telemetry<TelemetryName>.Name;
-        var configuration = new ConfigurationManager();
+        using var configuration = new ConfigurationManager();
         configuration.AddInMemoryCollection(new Dictionary<string, string?>
         {
-            [$"Telemetry:{name}:Tags:Tag"] = "Value",
+            [$"Telemetry:{name}:Tags:Kind"] = "Common",
+            [$"Telemetry:{name}:Logger:Tags:Kind"] = "Logger",
+            [$"Telemetry:{name}:ActivitySource:Tags:Kind"] = "ActivitySource",
+            [$"Telemetry:{name}:Meter:Tags:Kind"] = "Meter",
         });
         _services.AddSingleton<IConfiguration>(configuration);
 
@@ -284,13 +387,20 @@ public class TelemetryBuilder_should
 
         var serviceProvider = _services.BuildServiceProvider();
         var telemetry = serviceProvider.GetService<ITelemetry<TelemetryName>>();
-        var expectedOptions = new TelemetryOptions { Name = name, Tags = new Dictionary<string, object?> { ["Tag"] = "Value" } };
+        var expectedOptions = new TelemetryOptions
+        {
+            Name = name,
+            Tags = new Dictionary<string, object?> { ["Kind"] = "Common" },
+            Logger = { Tags = new Dictionary<string, object?> { ["Kind"] = "Logger" } },
+            ActivitySource = { Tags = new Dictionary<string, object?> { ["Kind"] = "ActivitySource" } },
+            Meter = { Tags = new Dictionary<string, object?> { ["Kind"] = "Meter" } },
+        };
         Assert.NotNull(telemetry);
         Assert.NotNull(telemetry.Logger);
         Assert.NotNull(telemetry.ActivitySource);
-        Assert.HasOptions(expectedOptions, telemetry.ActivitySource);
+        Assert.HasOptions(expectedOptions.ActivitySource, telemetry.ActivitySource);
         Assert.NotNull(telemetry.Meter);
-        Assert.HasOptions(expectedOptions, telemetry.Meter);
+        Assert.HasOptions(expectedOptions.Meter, telemetry.Meter);
     }
 
     public static readonly TelemetryOptionsData TelemetryOptionsData = [];
