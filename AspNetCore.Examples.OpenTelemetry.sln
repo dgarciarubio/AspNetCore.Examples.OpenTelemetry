@@ -18,15 +18,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNetCore.Examples.OpenTel
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNetCore.Examples.OpenTelemetry.ServiceDefaults", "AspNetCore.Examples.OpenTelemetry.ServiceDefaults\AspNetCore.Examples.OpenTelemetry.ServiceDefaults.csproj", "{48B7BA98-6E70-4D59-8F5A-B18C6B8586ED}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNetCore.Examples.OpenTelemetry.TelemetryServices", "AspNetCore.Examples.OpenTelemetry.TelemetryServices\AspNetCore.Examples.OpenTelemetry.TelemetryServices.csproj", "{7C67218A-4B33-4CB4-B12B-AF02E4E51EB6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TelemetryServices", "TelemetryServices\TelemetryServices.csproj", "{7C67218A-4B33-4CB4-B12B-AF02E4E51EB6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspNetCore.Examples.OpenTelemetry.OpenTelemetryServices", "AspNetCore.Examples.OpenTelemetry.OpenTelemetryServices\AspNetCore.Examples.OpenTelemetry.OpenTelemetryServices.csproj", "{4717F111-B155-444D-8CEA-7CDF60470F77}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TelemetryServices.OpenTelemetry", "TelemetryServices.OpenTelemetry\TelemetryServices.OpenTelemetry.csproj", "{4717F111-B155-444D-8CEA-7CDF60470F77}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmarks", "Benchmarks\Benchmarks.csproj", "{2311A35A-630F-8D56-15CD-BBB525570F8F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspNetCore.Examples.OpenTelemetry.TelemetryServices.Tests", "AspNetCore.Examples.OpenTelemetry.TelemetryServices.Tests\AspNetCore.Examples.OpenTelemetry.TelemetryServices.Tests.csproj", "{4B8DC55F-3196-0F6F-3F0D-A909A48033C4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TelemetryServices.Tests", "TelemetryServices.Tests\TelemetryServices.Tests.csproj", "{4B8DC55F-3196-0F6F-3F0D-A909A48033C4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspNetCore.Examples.OpenTelemetry.OpenTelemetryServices.Tests", "AspNetCore.Examples.OpenTelemetry.OpenTelemetryServices.Tests\AspNetCore.Examples.OpenTelemetry.OpenTelemetryServices.Tests.csproj", "{56E4B60F-DF20-433A-A01A-9F2B3D95EAC7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TelemetryServices.OpenTelemetry.Tests", "TelemetryServices.OpenTelemetry.Tests\TelemetryServices.OpenTelemetry.Tests.csproj", "{753BE31F-00D4-EF0F-8BF2-90F30EFEECBA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -62,10 +62,10 @@ Global
 		{4B8DC55F-3196-0F6F-3F0D-A909A48033C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4B8DC55F-3196-0F6F-3F0D-A909A48033C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4B8DC55F-3196-0F6F-3F0D-A909A48033C4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{56E4B60F-DF20-433A-A01A-9F2B3D95EAC7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{56E4B60F-DF20-433A-A01A-9F2B3D95EAC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{56E4B60F-DF20-433A-A01A-9F2B3D95EAC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{56E4B60F-DF20-433A-A01A-9F2B3D95EAC7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{753BE31F-00D4-EF0F-8BF2-90F30EFEECBA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{753BE31F-00D4-EF0F-8BF2-90F30EFEECBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{753BE31F-00D4-EF0F-8BF2-90F30EFEECBA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{753BE31F-00D4-EF0F-8BF2-90F30EFEECBA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

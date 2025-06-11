@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AspNetCore.Examples.OpenTelemetry.OpenTelemetryServices\AspNetCore.Examples.OpenTelemetry.OpenTelemetryServices.csproj" />
+    <ProjectReference Include="..\TelemetryServices.OpenTelemetry\TelemetryServices.OpenTelemetry.csproj" />
     <ProjectReference Include="..\AspNetCore.Examples.OpenTelemetry.ServiceDefaults\AspNetCore.Examples.OpenTelemetry.ServiceDefaults.csproj" />
   </ItemGroup>
 
