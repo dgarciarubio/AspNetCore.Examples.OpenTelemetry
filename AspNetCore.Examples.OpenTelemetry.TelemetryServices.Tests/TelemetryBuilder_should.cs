@@ -28,16 +28,31 @@ public class TelemetryBuilder_should
     }
 
     [Fact]
-    public void Fail_if_name_cannot_be_automatically_determined()
+    public void Fail_if_name_is_configured_to_null()
     {
+        var serviceProvider = _services.AddTelemetry(t =>
+        {
+            t.AddFor("Name1", o => o.Name = null!);
+            t.AddFor<TelemetryName>(o => o.Name = null!);
+            t.Add<TelemetryService>("Name2", o => o.Name = null!);
+            t.Add<ITelemetryService, TelemetryService>("Name3", o => o.Name = null!);
+            t.Add<TelemetryOfTNameService>(o => o.Name = null!);
+            t.Add<ITelemetryOfTNameService, TelemetryOfTNameService>(o => o.Name = null!);
+        }).BuildServiceProvider();
+
         Action[] actions = [
-            () => _services.AddTelemetry<TelemetryService>(),
-            () => _services.AddTelemetry<ITelemetryService, TelemetryService>(),
+            () => serviceProvider.GetRequiredKeyedService<ITelemetry>("Name1"),
+            () => serviceProvider.GetRequiredService<ITelemetry<TelemetryName>>(),
+            () => serviceProvider.GetRequiredService<TelemetryService>(),
+            () => serviceProvider.GetRequiredService<ITelemetryService>(),
+            () => serviceProvider.GetRequiredService<TelemetryOfTNameService>(),
+            () => serviceProvider.GetRequiredService<ITelemetryOfTNameService>(),
         ];
 
         Assert.All(actions, action =>
         {
-            Assert.Throws<InvalidOperationException>(action);
+            var exception = Assert.Throws<ArgumentNullException>(action);
+            Assert.Equal("value", exception.ParamName);
         });
     }
 
@@ -61,6 +76,20 @@ public class TelemetryBuilder_should
             () => serviceProvider.GetRequiredService<ITelemetryService>(),
             () => serviceProvider.GetRequiredService<TelemetryOfTNameService>(),
             () => serviceProvider.GetRequiredService<ITelemetryOfTNameService>(),
+        ];
+
+        Assert.All(actions, action =>
+        {
+            Assert.Throws<InvalidOperationException>(action);
+        });
+    }
+
+    [Fact]
+    public void Fail_if_name_cannot_be_automatically_determined()
+    {
+        Action[] actions = [
+            () => _services.AddTelemetry<TelemetryService>(),
+            () => _services.AddTelemetry<ITelemetryService, TelemetryService>(),
         ];
 
         Assert.All(actions, action =>
