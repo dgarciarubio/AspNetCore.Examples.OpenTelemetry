@@ -1,3 +1,6 @@
+using AspNetCore.Examples.OpenTelemetry.TelemetryServices.Tests.Extensions;
+using AspNetCore.Examples.OpenTelemetry.TelemetryServices.Tests.TestDoubles;
+using AspNetCore.Examples.OpenTelemetry.TelemetryServices.Tests.TheoryData;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using System.Diagnostics;
@@ -64,21 +67,15 @@ public class Telemetry_should
     public void Create_logs()
     {
         var options = new TelemetryOptions { Name = "Name" };
-        string? loggedCategoryName = null;
-        string? loggedValue = null;
         using var listener = new LoggingListener();
-        listener.Logged += (data) =>
-        {
-            loggedCategoryName = data.CategoryName;
-            loggedValue = data.Message;
-        };
 
         using var telemetry = new Telemetry(listener, _meterFactory, options);
         telemetry.Logger.LogDebug("Log");
 
-        Assert.NotNull(loggedValue);
-        Assert.NotNull(loggedCategoryName);
-        Assert.Equal(options.Name, loggedCategoryName);
+        var logged = listener.Logs.FirstOrDefault();
+        Assert.NotNull(logged);
+        Assert.Equal("Log", logged.Message);
+        Assert.Equal(options.Name, logged.CategoryName);
     }
 
     [Theory]
@@ -229,21 +226,15 @@ public class TelemetryTTelemetryName_should
     [Fact]
     public void Create_logs()
     {
-        string? loggedCategoryName = null;
-        string? loggedValue = null;
         using var listener = new LoggingListener();
-        listener.Logged += (data) =>
-        {
-            loggedCategoryName = data.CategoryName;
-            loggedValue = data.Message;
-        };
 
         using var telemetry = new Telemetry<TelemetryName>(listener, _meterFactory);
         telemetry.Logger.LogDebug("Log");
 
-        Assert.NotNull(loggedValue);
-        Assert.NotNull(loggedCategoryName);
-        Assert.Equal(Telemetry<TelemetryName>.Name, loggedCategoryName);
+        var logged = listener.Logs.FirstOrDefault();
+        Assert.NotNull(logged);
+        Assert.Equal("Log", logged.Message);
+        Assert.Equal(Telemetry<TelemetryName>.Name, logged.CategoryName);
     }
 
     public static readonly TelemetryOptionsData OptionsData = new(Telemetry<TelemetryName>.Name);

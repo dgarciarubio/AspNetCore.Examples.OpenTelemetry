@@ -1,5 +1,5 @@
 using AspNetCore.Examples.OpenTelemetry.TelemetryServices;
-using AspNetCore.Examples.OpenTelemetry.TelemetryServices.Tests;
+using AspNetCore.Examples.OpenTelemetry.TelemetryServices.Tests.TheoryData;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using Xunit.Sdk;
@@ -13,7 +13,7 @@ using Xunit.Sdk;
     typeof(object)
 )]
 
-namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices.Tests;
+namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices.Tests.TheoryData;
 
 internal class JsonDataSerializer : IXunitSerializer
 {

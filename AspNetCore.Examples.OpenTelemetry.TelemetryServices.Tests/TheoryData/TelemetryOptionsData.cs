@@ -1,4 +1,4 @@
-namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices.Tests;
+namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices.Tests.TheoryData;
 
 public class TelemetryOptionsData : TheoryData<TelemetryOptions>
 {

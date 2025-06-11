@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.Metrics;
 
-namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices.Tests;
+namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices.Tests.Extensions;
 
 internal static class AssertExtensions
 {

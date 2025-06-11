@@ -1,4 +1,4 @@
-using AspNetCore.Examples.OpenTelemetry.TelemetryServices.Tests;
+using AspNetCore.Examples.OpenTelemetry.TelemetryServices.Tests.TestDoubles;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using System.Collections;
@@ -6,45 +6,40 @@ using System.Diagnostics.Metrics;
 
 namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices.Tests;
 
-public class OptionsEnrichedLogger_should
+public sealed class OptionsEnrichedLogger_should : IDisposable
 {
-    private readonly ILogger _logger;
-    private readonly ILoggerFactory _loggerFactory;
     private readonly IMeterFactory _meterFactory;
+    private readonly LoggingListener _loggingListener;
 
     public OptionsEnrichedLogger_should()
     {
-        _logger = Substitute.For<ILogger>();
-        _loggerFactory = Substitute.For<ILoggerFactory>();
-        _loggerFactory.CreateLogger(Arg.Any<string>()).Returns(_logger);
         _meterFactory = Substitute.For<IMeterFactory>();
         _meterFactory.Create(Arg.Any<MeterOptions>()).Returns((callInfo) =>
         {
             var options = callInfo.Arg<MeterOptions>();
             return new Meter(options);
         });
+        _loggingListener = new LoggingListener();
     }
 
     [Fact]
     public void Not_be_used_if_options_not_contain_enrichment_data()
     {
         var options = new TelemetryOptions { Name = "Name" };
-        ILogger? loggerCreated = null;
-        using var listener = new LoggingListener();
-        listener.LoggerCreated += (logger) => loggerCreated = logger;
 
-        using var telemetry = new Telemetry(listener, _meterFactory, options);
+        using var telemetry = new Telemetry(_loggingListener, _meterFactory, options);
 
-        Assert.NotNull(loggerCreated);
-        Assert.Same(loggerCreated, telemetry.Logger);
+        var logger = _loggingListener.Loggers.FirstOrDefault();
+        Assert.NotNull(logger);
+        Assert.Same(logger, telemetry.Logger);
     }
 
     [Fact]
     public void Not_be_used_if_logger_options_not_contain_enrichment_data()
     {
         var options = new TelemetryOptions
-        { 
-            Name = "Name", 
+        {
+            Name = "Name",
             Version = "1.0",
             Tags = new Dictionary<string, object?>() { ["Tag"] = "TagValue" },
             Logger =
@@ -53,27 +48,23 @@ public class OptionsEnrichedLogger_should
                 Tags = null,
             }
         };
-        ILogger? loggerCreated = null;
-        using var listener = new LoggingListener();
-        listener.LoggerCreated += (logger) => loggerCreated = logger;
 
-        using var telemetry = new Telemetry(listener, _meterFactory, options);
+        using var telemetry = new Telemetry(_loggingListener, _meterFactory, options);
 
-        Assert.NotNull(loggerCreated);
-        Assert.Same(loggerCreated, telemetry.Logger);
+        var logger = _loggingListener.Loggers.FirstOrDefault();
+        Assert.NotNull(logger);
+        Assert.Same(logger, telemetry.Logger);
     }
 
     [Fact]
     public void Enrich_logs_with_options_version()
     {
         var options = new TelemetryOptions { Name = "Name", Version = "1.0" };
-        IEnumerable<KeyValuePair<string, object?>>? loggedState = null;
-        using var listener = new LoggingListener();
-        listener.Logged += (data) => loggedState = data.State as IEnumerable<KeyValuePair<string, object?>>;
 
-        using var telemetry = new Telemetry(listener, _meterFactory, options);
+        using var telemetry = new Telemetry(_loggingListener, _meterFactory, options);
         telemetry.Logger.LogDebug("Log");
 
+        var loggedState = _loggingListener.FormattedLogs.FirstOrDefault()?.State;
         Assert.NotNull(loggedState);
         Assert.Contains(loggedState, s =>
             s.Key == nameof(TelemetryOptions.Version) &&
@@ -85,13 +76,11 @@ public class OptionsEnrichedLogger_should
     public void Enrich_logs_with_options_tags()
     {
         var options = new TelemetryOptions { Name = "Name", Tags = new Dictionary<string, object?>() { ["Tag"] = "TagValue" } };
-        IEnumerable<KeyValuePair<string, object?>>? loggedState = null;
-        using var listener = new LoggingListener();
-        listener.Logged += (data) => loggedState = data.State as IEnumerable<KeyValuePair<string, object?>>;
 
-        using var telemetry = new Telemetry(listener, _meterFactory, options);
+        using var telemetry = new Telemetry(_loggingListener, _meterFactory, options);
         telemetry.Logger.LogDebug("Log");
 
+        var loggedState = _loggingListener.FormattedLogs.FirstOrDefault()?.State;
         Assert.NotNull(loggedState);
         Assert.All(options.Tags, optionsTag =>
         {
@@ -107,11 +96,8 @@ public class OptionsEnrichedLogger_should
     public void Preserve_original_standard_log_state(IEnumerable<KeyValuePair<string, object?>> originalState)
     {
         var options = new TelemetryOptions { Name = "Name", Version = "1.0" };
-        IEnumerable<KeyValuePair<string, object?>>? loggedState = null;
-        using var listener = new LoggingListener();
-        listener.Logged += (data) => loggedState = data.State as IEnumerable<KeyValuePair<string, object?>>;
 
-        using var telemetry = new Telemetry(listener, _meterFactory, options);
+        using var telemetry = new Telemetry(_loggingListener, _meterFactory, options);
         telemetry.Logger.Log(LogLevel.Debug,
             state: originalState,
             eventId: 0,
@@ -119,6 +105,7 @@ public class OptionsEnrichedLogger_should
             formatter: (_, _) => "Log"
         );
 
+        var loggedState = _loggingListener.FormattedLogs.FirstOrDefault()?.State;
         Assert.NotNull(loggedState);
         Assert.All(originalState, (s, i) =>
         {
@@ -134,11 +121,8 @@ public class OptionsEnrichedLogger_should
     public void Preserve_original_non_standard_log_state(object originalState)
     {
         var options = new TelemetryOptions { Name = "Name", Version = "1.0" };
-        IEnumerable<KeyValuePair<string, object?>>? loggedState = null;
-        using var listener = new LoggingListener();
-        listener.Logged += (data) => loggedState = data.State as IEnumerable<KeyValuePair<string, object?>>;
 
-        using var telemetry = new Telemetry(listener, _meterFactory, options);
+        using var telemetry = new Telemetry(_loggingListener, _meterFactory, options);
         telemetry.Logger.Log(LogLevel.Debug,
             state: originalState,
             eventId: 0,
@@ -146,6 +130,7 @@ public class OptionsEnrichedLogger_should
             formatter: (_, _) => "Log"
         );
 
+        var loggedState = _loggingListener.FormattedLogs.FirstOrDefault()?.State;
         Assert.NotNull(loggedState);
         Assert.Contains(loggedState, ss =>
             ss.Key == "State" &&
@@ -157,43 +142,27 @@ public class OptionsEnrichedLogger_should
     public void Not_preserve_original_null_log_state()
     {
         var options = new TelemetryOptions { Name = "Name", Version = "1.0" };
-        IEnumerable<KeyValuePair<string, object?>>? loggedState = null;
-        using var listener = new LoggingListener();
-        listener.Logged += (data) => loggedState = data.State as IEnumerable<KeyValuePair<string, object?>>;
 
-        using var telemetry = new Telemetry(listener, _meterFactory, options);
+        using var telemetry = new Telemetry(_loggingListener, _meterFactory, options);
         telemetry.Logger.Log<object?>(LogLevel.Debug,
             state: null,
             eventId: 0,
             exception: null,
             formatter: (_, _) => "Log"
         );
-        telemetry.Logger.Log<int?>(LogLevel.Debug,
-            state: null,
-            eventId: 0,
-            exception: null,
-            formatter: (_, _) => "Log"
-        );
 
+        var loggedState = _loggingListener.FormattedLogs.FirstOrDefault()?.State;
         Assert.NotNull(loggedState);
         Assert.DoesNotContain(loggedState, s => s.Key == "State");
     }
 
     [Theory]
     [ClassData(typeof(StandardLogStatesData))]
-    public void Produce_a_dictionary_like_state_in_defined_order(IEnumerable<KeyValuePair<string, object?>> originalState)
+    public void Produce_a_state_in_defined_order(IEnumerable<KeyValuePair<string, object?>> originalState)
     {
         var options = new TelemetryOptions { Name = "Name", Version = "1.0", Tags = new Dictionary<string, object?>() { ["Tag"] = "TagValue" } };
-        IReadOnlyList<KeyValuePair<string, object?>>? loggedState = null;
-        IEnumerator? loggedStateEnumerator = null;
-        using var listener = new LoggingListener();
-        listener.Logged += (data) =>
-        {
-            loggedState = data.State as IReadOnlyList<KeyValuePair<string, object?>>;
-            loggedStateEnumerator = (data.State as IEnumerable)?.GetEnumerator();
-        };
 
-        using var telemetry = new Telemetry(listener, _meterFactory, options);
+        using var telemetry = new Telemetry(_loggingListener, _meterFactory, options);
         telemetry.Logger.Log(LogLevel.Debug,
             state: originalState,
             eventId: 0,
@@ -201,16 +170,19 @@ public class OptionsEnrichedLogger_should
             formatter: (_, _) => "Log"
         );
 
-        Assert.NotNull(loggedState);
+        var loggedState = _loggingListener.FormattedLogs.FirstOrDefault()?.State;
+        var loggedStateList = loggedState as IReadOnlyList<KeyValuePair<string, object?>>;
+        var loggedStateEnumerator = (loggedState as IEnumerable)?.GetEnumerator();
+        Assert.NotNull(loggedStateList);
         Assert.NotNull(loggedStateEnumerator);
-        Assert.Equal(1 + options.Tags.Count() + originalState.Count(), loggedState.Count);
+        Assert.Equal(1 + options.Tags.Count() + originalState.Count(), loggedStateList.Count);
         Assert.All(options.Tags, (tag, i) =>
         {
-            Assert.Equal(tag, loggedState[i + 1]);
+            Assert.Equal(tag, loggedStateList[i + 1]);
         });
         Assert.All(originalState, (s, i) =>
         {
-            Assert.Equal(s, loggedState[i + 1 + options.Tags.Count()]);
+            Assert.Equal(s, loggedStateList[i + 1 + options.Tags.Count()]);
         });
     }
 
@@ -218,45 +190,42 @@ public class OptionsEnrichedLogger_should
     public void Forward_scopes_to_underlying_logger()
     {
         var options = new TelemetryOptions { Name = "Name", Version = "1.0" };
-        Dictionary<string, object?>? begunScope = null;
-        using var scopeDisposable = new LoggingScopeDisposable();
-        using var listener = new LoggingListener();
-        listener.BegunScope += (state) =>
-        {
-            begunScope = state as Dictionary<string, object?>;
-            return scopeDisposable;
-        };
+        var scope = new Dictionary<string, object?> { ["ScopeTag"] = "ScopeTagValue" };
 
-        using var telemetry = new Telemetry(listener, _meterFactory, options);
-        using var beginScopeResponse = telemetry.Logger.BeginScope(new Dictionary<string, object?> { ["ScopeTag"] = "ScopeTagValue" });
+        using var telemetry = new Telemetry(_loggingListener, _meterFactory, options);
+        using var scopeDisposable = telemetry.Logger.BeginScope(scope);
 
+        var begunScope = _loggingListener.TagListScopes.FirstOrDefault();
         Assert.NotNull(begunScope);
-        Assert.NotEmpty(begunScope);
-        Assert.Same(scopeDisposable, beginScopeResponse);
+        Assert.Equal(scope.Count, begunScope.Count());
+        Assert.All(scope, s =>
+        {
+            Assert.Contains(begunScope, ss =>
+                ss.Key == s.Key &&
+                ss.Value == s.Value
+            );
+        });
+        Assert.Same(LoggingListener.NullScopeDisposable.Instance, scopeDisposable);
     }
 
     [Theory]
-    [InlineData(LogLevel.Debug, true)]
-    [InlineData(LogLevel.Debug, false)]
-    [InlineData(LogLevel.Information, true)]
-    [InlineData(LogLevel.Information, false)]
-    public void Forward_log_level_enabled_to_underlying_logger(LogLevel logLevel, bool isEnabled)
+    [InlineData(LogLevel.Information, LogLevel.Information, true)]
+    [InlineData(LogLevel.Information, LogLevel.Warning, true)]
+    [InlineData(LogLevel.Warning, LogLevel.Information, false)]
+    public void Forward_log_level_enabled_to_underlying_logger(LogLevel minLogLevel, LogLevel logLevel, bool shouldBeEnabled)
     {
         var options = new TelemetryOptions { Name = "Name", Version = "1.0" };
-        LogLevel? logLevelEnabledCalled = null;
-        using var listener = new LoggingListener();
-        listener.IsLevelEnabledCalled += (logLevel) =>
-        {
-            logLevelEnabledCalled = logLevel;
-            return isEnabled;
-        };
+        _loggingListener.MinLogLevel = minLogLevel;
 
-        using var telemetry = new Telemetry(listener, _meterFactory, options);
-        var isEnabledResponse = telemetry.Logger.IsEnabled(logLevel);
+        using var telemetry = new Telemetry(_loggingListener, _meterFactory, options);
+        var isEnabled = telemetry.Logger.IsEnabled(logLevel);
 
-        Assert.NotNull(logLevelEnabledCalled);
-        Assert.Equal(logLevel, logLevelEnabledCalled);
-        Assert.Equal(isEnabled, isEnabledResponse);
+        Assert.Equal(isEnabled, shouldBeEnabled);
+    }
+
+    public void Dispose()
+    {
+        _loggingListener.Dispose();
     }
 
     public class StandardLogStatesData : TheoryData<IEnumerable<KeyValuePair<string, object?>>>
@@ -283,10 +252,5 @@ public class OptionsEnrichedLogger_should
             Add("State");
             Add(new DateTime(2025, 01, 01));
         }
-    }
-
-    private class LoggingScopeDisposable : IDisposable
-    {
-        public void Dispose() { }
     }
 }

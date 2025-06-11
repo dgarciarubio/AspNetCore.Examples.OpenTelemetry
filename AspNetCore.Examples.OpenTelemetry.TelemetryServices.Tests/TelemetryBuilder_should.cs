@@ -1,3 +1,5 @@
+using AspNetCore.Examples.OpenTelemetry.TelemetryServices.Tests.Extensions;
+using AspNetCore.Examples.OpenTelemetry.TelemetryServices.Tests.TheoryData;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
