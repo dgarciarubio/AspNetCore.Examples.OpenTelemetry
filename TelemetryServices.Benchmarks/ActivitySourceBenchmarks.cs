@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using System.Diagnostics;
 
-namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices.Benchmarks;
+namespace TelemetryServices.Benchmarks;
 
 [MemoryDiagnoser]
 public class ActivitySourceBenchmarks : IDisposable

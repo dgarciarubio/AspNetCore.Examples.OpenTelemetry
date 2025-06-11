@@ -1,4 +1,5 @@
-﻿using AspNetCore.Examples.OpenTelemetry.TelemetryServices.Benchmarks;
+﻿using TelemetryServices.Benchmarks;
+using BenchmarkDotNet.Reports;
 using BenchmarkDotNet.Running;
 using Microsoft.Extensions.Configuration;
 
@@ -14,7 +15,7 @@ var benchmarks = new Type[] {
     typeof(ActivitySourceBenchmarks),
     typeof(MeterBenchmarks),
 };
-var benchmarkRuns = benchmarks.ToDictionary<Type, string, Action>(
+var benchmarkRuns = benchmarks.ToDictionary<Type, string, Func<Summary>>(
     t => t.Name,
     t => () => BenchmarkRunner.Run(t)
 );

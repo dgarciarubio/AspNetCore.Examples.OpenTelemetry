@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics.Metrics;
 
-namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices.Benchmarks;
+namespace TelemetryServices.Benchmarks;
 
 [MemoryDiagnoser]
 public class MeterBenchmarks : IDisposable

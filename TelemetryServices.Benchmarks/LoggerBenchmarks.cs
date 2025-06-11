@@ -1,8 +1,9 @@
 ﻿using BenchmarkDotNet.Attributes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using TelemetryServices.Benchmarks.BenchmarkDoubles;
 
-namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices.Benchmarks;
+namespace TelemetryServices.Benchmarks;
 
 [MemoryDiagnoser]
 public class LoggerBenchmarks : IDisposable
@@ -11,7 +12,9 @@ public class LoggerBenchmarks : IDisposable
 
     private readonly ILogger<StandardLoggerName> _standardLogger;
     private readonly ILogger<TelemetryName> _telemetryOfTName;
+    private readonly ILogger<TelemetryNameEnriched> _telemetryOfTNameEnriched;
     private readonly ILogger _namedTelemetry;
+    private readonly ILogger _namedTelemetryEnriched;
 
     public LoggerBenchmarks()
     {
@@ -19,7 +22,29 @@ public class LoggerBenchmarks : IDisposable
             .AddLogging(l => l.AddProvider(LoggingListener.Instance))
             .AddTelemetry(telemetry =>
             {
-                telemetry.AddFor("Name", o =>
+                telemetry.AddFor("Named", o =>
+                {
+                    o.Version = "1.0";
+                    o.Tags = new Dictionary<string, object?>()
+                    {
+                        ["Tag1"] = "Value1",
+                        ["Tag2"] = "Value2",
+                    };
+                    o.Logger.Version = null;
+                    o.Logger.Tags = null;
+                });
+                telemetry.AddFor<TelemetryName>(o =>
+                {
+                    o.Version = "1.0";
+                    o.Tags = new Dictionary<string, object?>()
+                    {
+                        ["Tag1"] = "Value1",
+                        ["Tag2"] = "Value2",
+                    };
+                    o.Logger.Version = null;
+                    o.Logger.Tags = null;
+                });
+                telemetry.AddFor("NamedEnriched", o =>
                 {
                     o.Version = "1.0";
                     o.Tags = new Dictionary<string, object?>()
@@ -28,7 +53,7 @@ public class LoggerBenchmarks : IDisposable
                         ["Tag2"] = "Value2",
                     };
                 });
-                telemetry.AddFor<TelemetryName>(o =>
+                telemetry.AddFor<TelemetryNameEnriched>(o =>
                 {
                     o.Version = "1.0";
                     o.Tags = new Dictionary<string, object?>()
@@ -42,7 +67,9 @@ public class LoggerBenchmarks : IDisposable
 
         _standardLogger = _serviceProvider.GetRequiredService<ILogger<StandardLoggerName>>();
         _telemetryOfTName = _serviceProvider.GetRequiredService<ITelemetry<TelemetryName>>().Logger;
-        _namedTelemetry = _serviceProvider.GetRequiredKeyedService<ITelemetry>("Name").Logger;
+        _namedTelemetry = _serviceProvider.GetRequiredKeyedService<ITelemetry>("Named").Logger;
+        _telemetryOfTNameEnriched = _serviceProvider.GetRequiredService<ITelemetry<TelemetryNameEnriched>>().Logger;
+        _namedTelemetryEnriched = _serviceProvider.GetRequiredKeyedService<ITelemetry>("NamedEnriched").Logger;
     }
 
     [Benchmark]
@@ -70,7 +97,7 @@ public class LoggerBenchmarks : IDisposable
     }
 
     [Benchmark]
-    public void LogStandardHighPerfWithScope()
+    public void LogStandardWithScopeHighPerf()
     {
         using var scope = _standardLogger.BeginScope(new Dictionary<string, object?>
         {
@@ -94,15 +121,39 @@ public class LoggerBenchmarks : IDisposable
     }
 
     [Benchmark]
-    public void LogNamed()
+    public void LogTelemetryOfTNameEnriched()
     {
-        _namedTelemetry.LogInformation("Log from {LoggerKind}", "named");
+        _telemetryOfTNameEnriched.LogInformation("Log from {LoggerKind}", nameof(TelemetryNameEnriched));
     }
 
     [Benchmark]
-    public void LogNamedHighPerf()
+    public void LogTelemetryOfTNameEnrichedHighPerf()
     {
-        _namedTelemetry.LogFrom("named");
+        _telemetryOfTNameEnriched.LogFrom(nameof(TelemetryNameEnriched));
+    }
+
+    [Benchmark]
+    public void LogTelemetry()
+    {
+        _namedTelemetry.LogInformation("Log from {LoggerKind}", "Name");
+    }
+
+    [Benchmark]
+    public void LogTelemetryHighPerf()
+    {
+        _namedTelemetry.LogFrom("Name");
+    }
+
+    [Benchmark]
+    public void LogTelemetryEnriched()
+    {
+        _namedTelemetry.LogInformation("Log from {LoggerKind}", "NamedEnriched");
+    }
+
+    [Benchmark]
+    public void LogTelemetryEnrichedHighPerf()
+    {
+        _namedTelemetryEnriched.LogFrom("NamedEnriched");
     }
 
     public void Dispose()
@@ -113,27 +164,9 @@ public class LoggerBenchmarks : IDisposable
 
     private class StandardLoggerName { }
 
+    private class TelemetryNameEnriched { }
+
     private class TelemetryName { }
-
-    private class LoggingListener : ILoggerProvider
-    {
-        public static readonly LoggingListener Instance = new();
-
-        public ILogger CreateLogger(string categoryName) => CatchAllLogger.Instance;
-
-        public void Dispose() { }
-
-        private class CatchAllLogger : ILogger
-        {
-            public static readonly CatchAllLogger Instance = new();
-
-            public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
-
-            public bool IsEnabled(LogLevel logLevel) => true;
-
-            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) { }
-        }
-    }
 }
 
 public static partial class LoggerExtensions

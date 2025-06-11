@@ -8,12 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AspNetCore.Examples.OpenTelemetry.TelemetryServices\AspNetCore.Examples.OpenTelemetry.TelemetryServices.csproj" />
+    <ProjectReference Include="..\TelemetryServices.Benchmarks\TelemetryServices.Benchmarks.csproj" />
   </ItemGroup>
 
   <ItemGroup>
