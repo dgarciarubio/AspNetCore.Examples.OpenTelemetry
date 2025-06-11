@@ -25,7 +25,7 @@ internal class OpenTelemetryMetricListener : PeriodicExportingMetricReader
     public async Task<IEnumerable<Metric>> WaitForMetrics(CancellationToken cancellationToken)
     {
         using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(_exportIntervalMilliseconds));
-        while (_exporter.Metrics.Count == 0)
+        while (_exporter.Metrics.IsEmpty)
         {
             await timer.WaitForNextTickAsync(cancellationToken);
         }

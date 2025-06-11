@@ -2,12 +2,12 @@
 
 namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices.Logging;
 
-internal class OptionsEnrichedLogger : ILogger
+internal class EnrichedLoggerFromOptions : ILogger
 {
     private readonly ILogger _inner;
     private readonly IReadOnlyList<KeyValuePair<string, object?>> _options;
 
-    protected OptionsEnrichedLogger(ILogger inner, IReadOnlyList<KeyValuePair<string, object?>> options)
+    protected EnrichedLoggerFromOptions(ILogger inner, IReadOnlyList<KeyValuePair<string, object?>> options)
     {
         _inner = inner;
         _options = options;
@@ -29,7 +29,7 @@ internal class OptionsEnrichedLogger : ILogger
         return structuredStateOptions switch
         {
             { Length: 0 } => inner,
-            _ => new OptionsEnrichedLogger(inner, structuredStateOptions),
+            _ => new EnrichedLoggerFromOptions(inner, structuredStateOptions),
         };
     }
 
@@ -49,9 +49,9 @@ internal class OptionsEnrichedLogger : ILogger
     }
 }
 
-internal class OptionsEnrichedLogger<TCategoryName> : OptionsEnrichedLogger, ILogger<TCategoryName>
+internal class EnrichedLoggerFromOptions<TCategoryName> : EnrichedLoggerFromOptions, ILogger<TCategoryName>
 {
-    private OptionsEnrichedLogger(ILogger<TCategoryName> inner, KeyValuePair<string, object?>[] optionsState)
+    private EnrichedLoggerFromOptions(ILogger<TCategoryName> inner, KeyValuePair<string, object?>[] optionsState)
         : base(inner, optionsState)
     {
     }
@@ -62,7 +62,7 @@ internal class OptionsEnrichedLogger<TCategoryName> : OptionsEnrichedLogger, ILo
         return optionsState switch
         {
             { Length: 0 } => inner,
-            _ => new OptionsEnrichedLogger<TCategoryName>(inner, optionsState),
+            _ => new EnrichedLoggerFromOptions<TCategoryName>(inner, optionsState),
         };
     }
 }

@@ -18,7 +18,7 @@ public class Telemetry : ITelemetry, IDisposable
         Options = options;
 
         var logger = loggerFactory.CreateLogger(Options.Logger.Name);
-        Logger = OptionsEnrichedLogger.Create(logger, Options.Logger);
+        Logger = EnrichedLoggerFromOptions.Create(logger, Options.Logger);
         ActivitySource = new ActivitySource(Options.ActivitySource.Name,
             version: Options.ActivitySource.Version,
             tags: Options.ActivitySource.Tags
@@ -66,7 +66,7 @@ public class Telemetry<TTelemetryName> : Telemetry, ITelemetry<TTelemetryName>, 
         )
     {
         var logger = loggerFactory.CreateLogger<TTelemetryName>();
-        Logger = OptionsEnrichedLogger<TTelemetryName>.Create(logger, Options.Logger);
+        Logger = EnrichedLoggerFromOptions<TTelemetryName>.Create(logger, Options.Logger);
     }
 
     public new ILogger<TTelemetryName> Logger { get; }

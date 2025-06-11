@@ -1,4 +1,3 @@
-using AspNetCore.Examples.OpenTelemetry.OpenTelemetryServices.Tests.Extensions;
 using AspNetCore.Examples.OpenTelemetry.OpenTelemetryServices.Tests.TestDoubles;
 using AspNetCore.Examples.OpenTelemetry.TelemetryServices;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,8 +29,8 @@ public sealed class OpenTelemetryProviderBuilderExtensions_should : IDisposable
     public void Fail_if_null_builder()
     {
         Action[] actions = [
-            () => OpenTelemetryProviderBuilderExtensions.AddSourceFor<TelemetryName>(null!),
-            () => OpenTelemetryProviderBuilderExtensions.AddMeterFor<TelemetryName>(null!),
+            () => OpenTelemetryTracerProviderBuilderExtensions.AddSourceFor<TelemetryName>(null!),
+            () => OpenTelemetryMeterProviderBuilderExtensions.AddMeterFor<TelemetryName>(null!),
         ];
 
         Assert.All(actions, action =>

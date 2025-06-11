@@ -1,9 +1,9 @@
-﻿using AspNetCore.Examples.OpenTelemetry.TelemetryServices;
+﻿using AspNetCore.Examples.OpenTelemetry.TelemetryServices.Extensions;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 
 #pragma warning disable IDE0130 // Namespace does not match folder structure
-namespace Microsoft.Extensions.DependencyInjection;
+namespace OpenTelemetry;
 #pragma warning restore IDE0130 // Namespace does not match folder structure
 
 public static class TelemetryServiceBuilderExtensions
@@ -20,22 +20,5 @@ public static class TelemetryServiceBuilderExtensions
             builder.Services.ConfigureOpenTelemetryMeterProvider(m => m.AddMeter(builder.Name));
         }
         return builder;
-    }
-}
-
-public static class OpenTelemetryProviderBuilderExtensions
-{
-    public static TracerProviderBuilder AddSourceFor<TTelemetryName>(this TracerProviderBuilder builder)
-    {
-        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        var name = Telemetry<TTelemetryName>.Name;
-        return builder.AddSource(name);
-    }
-
-    public static MeterProviderBuilder AddMeterFor<TTelemetryName>(this MeterProviderBuilder builder)
-    {
-        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        var name = Telemetry<TTelemetryName>.Name;
-        return builder.AddMeter(name);
     }
 }

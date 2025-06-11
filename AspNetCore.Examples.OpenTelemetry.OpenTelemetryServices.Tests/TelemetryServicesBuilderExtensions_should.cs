@@ -1,8 +1,8 @@
-using AspNetCore.Examples.OpenTelemetry.OpenTelemetryServices.Tests.Extensions;
 using AspNetCore.Examples.OpenTelemetry.OpenTelemetryServices.Tests.TestDoubles;
 using AspNetCore.Examples.OpenTelemetry.TelemetryServices;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 
