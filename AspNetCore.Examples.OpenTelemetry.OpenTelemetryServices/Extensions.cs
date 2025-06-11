@@ -6,24 +6,7 @@ using OpenTelemetry.Trace;
 namespace Microsoft.Extensions.DependencyInjection;
 #pragma warning restore IDE0130 // Namespace does not match folder structure
 
-public static class OpenTelemetryProviderBuilderExtensions
-{
-    public static TracerProviderBuilder AddSourceFor<TTelemetryName>(this TracerProviderBuilder traces)
-    {
-        ArgumentNullException.ThrowIfNull(traces, nameof(traces));
-        var name = Telemetry<TTelemetryName>.Name;
-        return traces.AddSource(name);
-    }
-
-    public static MeterProviderBuilder AddMeterFor<TTelemetryName>(this MeterProviderBuilder meters)
-    {
-        ArgumentNullException.ThrowIfNull(meters, nameof(meters));
-        var name = Telemetry<TTelemetryName>.Name;
-        return meters.AddMeter(name);
-    }
-}
-
-public static class TelemetryServicesBuilderExtensions
+public static class TelemetryServiceBuilderExtensions
 {
     public static TelemetryServiceBuilder AddToOpenTelemetryProviders(this TelemetryServiceBuilder builder, bool addSource = true, bool addMeter = true)
     {
@@ -40,5 +23,19 @@ public static class TelemetryServicesBuilderExtensions
     }
 }
 
+public static class OpenTelemetryProviderBuilderExtensions
+{
+    public static TracerProviderBuilder AddSourceFor<TTelemetryName>(this TracerProviderBuilder builder)
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        var name = Telemetry<TTelemetryName>.Name;
+        return builder.AddSource(name);
+    }
 
-
+    public static MeterProviderBuilder AddMeterFor<TTelemetryName>(this MeterProviderBuilder builder)
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        var name = Telemetry<TTelemetryName>.Name;
+        return builder.AddMeter(name);
+    }
+}

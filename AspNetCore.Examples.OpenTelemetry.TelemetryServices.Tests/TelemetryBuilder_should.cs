@@ -9,7 +9,7 @@ namespace AspNetCore.Examples.OpenTelemetry.TelemetryServices.Tests;
 
 public class TelemetryBuilder_should
 {
-    private readonly IServiceCollection _services = new ServiceCollection().AddTelemetry();
+    private readonly IServiceCollection _services = new ServiceCollection();
 
     [Fact]
     public void Fail_if_null_name()
