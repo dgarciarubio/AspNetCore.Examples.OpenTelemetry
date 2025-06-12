@@ -12,8 +12,6 @@ var settings = configuration.GetSection("Benchmarks").Get<Dictionary<string, Ben
 var benchmarks = new Type[] {
     typeof(DependencyInjectionBenchmarks),
     typeof(LoggerBenchmarks),
-    typeof(ActivitySourceBenchmarks),
-    typeof(MeterBenchmarks),
 };
 var benchmarkRuns = benchmarks.ToDictionary<Type, string, Func<Summary>>(
     t => t.Name,

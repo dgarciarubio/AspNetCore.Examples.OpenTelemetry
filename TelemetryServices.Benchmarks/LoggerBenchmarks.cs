@@ -147,7 +147,7 @@ public class LoggerBenchmarks : IDisposable
     [Benchmark]
     public void LogTelemetryEnriched()
     {
-        _namedTelemetry.LogInformation("Log from {LoggerKind}", "NamedEnriched");
+        _namedTelemetryEnriched.LogInformation("Log from {LoggerKind}", "NamedEnriched");
     }
 
     [Benchmark]
