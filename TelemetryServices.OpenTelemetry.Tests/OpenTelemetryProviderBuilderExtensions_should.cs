@@ -51,7 +51,7 @@ public sealed class OpenTelemetryProviderBuilderExtensions_should : IDisposable
             using var activity = telemetry.ActivitySource.StartActivity("TestActivity");
             var recordedActivities = _traceListener.Activities;
             Assert.NotNull(activity);
-            Assert.Contains(recordedActivities, a => a.DisplayName == activity.DisplayName);
+            Assert.Contains(activity, recordedActivities);
         });
     }
 
@@ -64,10 +64,13 @@ public sealed class OpenTelemetryProviderBuilderExtensions_should : IDisposable
         await _hostBuilder.RunInHost(async host =>
         {
             var telemetry = host.Services.GetRequiredService<ITelemetry<TelemetryName>>();
-            var meter = telemetry.Meter.CreateCounter<int>("TestCounter");
-            meter.Add(1);
+            var counter = telemetry.Meter.CreateCounter<int>("TestCounter");
+            counter.Add(1);
             var recordedMetrics = await _metricListener.WaitForMetrics();
-            Assert.Contains(recordedMetrics, m => m.Name == meter.Name);
+            Assert.Contains(recordedMetrics, m =>
+                m.MeterName == telemetry.Meter.Name &&
+                m.Name == counter.Name
+            );
         });
     }
 
